@@ -34,6 +34,7 @@ interface InterviewChatProps {
   simulationMode: boolean;
   resumeText?: string | null;
   candidateName?: string | null;
+  targetRole?: string | null;
 }
 
 const SIMULATION_ORDER = ["hr", "architect", "team-lead", "panel"] as const;
@@ -282,7 +283,7 @@ function VerdictCard({ verdict }: { verdict: Verdict }) {
   );
 }
 
-export function InterviewChat({ persona, simulationMode, resumeText, candidateName }: InterviewChatProps) {
+export function InterviewChat({ persona, simulationMode, resumeText, candidateName, targetRole }: InterviewChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -342,6 +343,7 @@ export function InterviewChat({ persona, simulationMode, resumeText, candidateNa
         round: simulationMode ? currentRound + 1 : undefined,
         resume: resumeText || undefined,
         candidateName: candidateName || undefined,
+        targetRole: targetRole || undefined,
       };
 
       let res = await fetch("/api/ai/interview", {
@@ -422,6 +424,7 @@ export function InterviewChat({ persona, simulationMode, resumeText, candidateNa
     interviewEnded,
     resumeText,
     candidateName,
+    targetRole,
   ]);
 
   const handleKeyDown = useCallback(
@@ -662,36 +665,34 @@ export function InterviewChat({ persona, simulationMode, resumeText, candidateNa
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`${
-              msg.role === "user" ? "text-right" : "text-left"
-            }`}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             style={{ animation: "fade-up 0.2s ease-out" }}
           >
-            <span
-              className={`inline-block max-w-[85%] p-3 font-mono text-sm ${
-                msg.role === "user"
-                  ? "text-accent-fg"
-                  : "text-foreground"
-              }`}
-              style={
-                msg.role === "user"
-                  ? {
-                      border: `1px solid ${IN_ACCENT}`,
-                      background: IN_ACCENT,
-                      boxShadow: `0 0 18px ${IN_ACCENT_SOFT}`,
-                    }
-                  : {
-                      border: `1px solid ${IN_BORDER}`,
-                      background: IN_FILL_SOFT,
-                    }
-              }
-            >
-              {msg.role === "assistant"
-                ? extractChatText(msg.content)
-                : msg.content}
-              {msg.role === "assistant" &&
-                isStreaming &&
-                i === messages.length - 1 && (
+            {msg.role === "user" ? (
+              <div className="flex max-w-[78%] flex-col items-end gap-1">
+                <span
+                  className="rounded-2xl rounded-br-md px-4 py-3 text-left text-sm leading-relaxed text-white shadow-md"
+                  style={{
+                    background: `linear-gradient(135deg, ${IN_ACCENT}, ${IN_PRIMARY})`,
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    boxShadow: `0 4px 16px ${IN_ACCENT_SOFT}`,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {msg.content}
+                </span>
+                <span className="mr-1 font-mono text-[10px] text-subtle">You</span>
+              </div>
+            ) : (
+              <span
+                className="inline-block max-w-[85%] rounded-xl border p-3 font-mono text-sm text-foreground"
+                style={{
+                  borderColor: IN_BORDER,
+                  background: IN_FILL_SOFT,
+                }}
+              >
+                {extractChatText(msg.content)}
+                {isStreaming && i === messages.length - 1 && (
                   <span
                     className="ml-0.5 inline-block h-3 w-1.5 bg-foreground"
                     style={{
@@ -699,7 +700,8 @@ export function InterviewChat({ persona, simulationMode, resumeText, candidateNa
                     }}
                   />
                 )}
-            </span>
+              </span>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />

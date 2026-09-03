@@ -20,6 +20,7 @@ export default function InterviewPage() {
   const [resumeText, setResumeText] = useState<string | null>(null);
   const [resumeName, setResumeName] = useState<string | null>(null);
   const [candidateName, setCandidateName] = useState<string | null>(null);
+  const [targetRole, setTargetRole] = useState("Software Engineer");
 
   function handlePersonaSelect(p: string) {
     setPersona(p);
@@ -39,6 +40,8 @@ export default function InterviewPage() {
     setCandidateName(null);
     setSessionKey((k) => k + 1);
   }
+
+  const ROLES = ["Software Engineer", "Fullstack Developer", "AI Engineer", "Backend Engineer", "Frontend Engineer", "Data Engineer", "DevOps Engineer"];
 
   return (
     <div className="section-container">
@@ -69,16 +72,26 @@ export default function InterviewPage() {
           simulationMode={simulationMode}
           onToggleSimulation={toggleSimulation}
         />
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t pt-4" style={{ borderColor: IN_BORDER }}>
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-subtle">Target role</span>
+          <select
+            value={targetRole}
+            onChange={(e) => setTargetRole(e.target.value)}
+            className="rounded-lg border px-3 py-1.5 font-mono text-xs"
+            style={{ borderColor: IN_BORDER, backgroundColor: IN_FILL_SOFT, color: "var(--text-muted)" }}
+          >
+            {ROLES.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+          <span className="font-mono text-[10px] text-subtle hidden sm:inline">questions will adapt to resume + this role</span>
+        </div>
       </div>
 
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,340px)_1fr] lg:items-start">
         {/* Left: resume + session (sticky) */}
         <div className="lg:sticky lg:top-24 space-y-5">
           <div className="rounded-xl border p-6" style={{ borderColor: IN_BORDER, backgroundColor: IN_FILL }}>
-            <div className="mb-4 flex items-center justify-between">
-              <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-subtle">Resume (optional)</span>
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: IN_ACCENT, boxShadow: `0 0 8px ${IN_ACCENT}` }} />
-            </div>
             <ResumeUpload
               resumeText={resumeText}
               resumeName={resumeName}
@@ -134,6 +147,7 @@ export default function InterviewPage() {
               simulationMode={simulationMode}
               resumeText={resumeText}
               candidateName={candidateName}
+              targetRole={targetRole}
             />
           </div>
         </div>
