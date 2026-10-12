@@ -1,0 +1,294 @@
+[
+  {
+    "name": "Next.js",
+    "category": "core",
+    "tier": 1,
+    "projectIds": [
+      "sys-003"
+    ]
+  },
+  {
+    "name": "React",
+    "category": "core",
+    "tier": 1,
+    "projectIds": [
+      "sys-001",
+      "sys-002",
+      "sys-003"
+    ]
+  },
+  {
+    "name": "TypeScript",
+    "category": "core",
+    "tier": 1,
+    "projectIds": [
+      "sys-001",
+      "sys-002",
+      "sys-003"
+    ]
+  },
+  {
+    "name": "C#",
+    "category": "core",
+    "tier": 1,
+    "projectIds": [
+      "sys-001",
+      "sys-002",
+      "sys-003"
+    ]
+  },
+  {
+    "name": ".NET 8",
+    "category": "core",
+    "tier": 1,
+    "projectIds": [
+      "sys-001",
+      "sys-002"
+    ]
+  },
+  {
+    "name": "ASP.NET Core",
+    "category": "core",
+    "tier": 1,
+    "projectIds": [
+      "sys-001",
+      "sys-002"
+    ]
+  },
+  {
+    "name": "EF Core",
+    "category": "core",
+    "tier": 1,
+    "projectIds": [
+      "sys-001",
+      "sys-002"
+    ]
+  },
+  {
+    "name": "SQL Server",
+    "category": "data",
+    "tier": 1,
+    "projectIds": [
+      "sys-001",
+      "sys-002"
+    ]
+  },
+  {
+    "name": "Tailwind CSS",
+    "category": "supporting",
+    "tier": 2,
+    "projectIds": [
+      "sys-001",
+      "sys-002",
+      "sys-003"
+    ]
+  },
+  {
+    "name": "TanStack Query",
+    "category": "supporting",
+    "tier": 2,
+    "projectIds": [
+      "sys-003"
+    ]
+  },
+  {
+    "name": "Leaflet",
+    "category": "supporting",
+    "tier": 2,
+    "projectIds": [
+      "sys-003"
+    ]
+  },
+  {
+    "name": "Minimal APIs",
+    "category": "supporting",
+    "tier": 2,
+    "projectIds": [
+      "sys-001"
+    ]
+  },
+  {
+    "name": "JWT",
+    "category": "supporting",
+    "tier": 2,
+    "projectIds": [
+      "sys-001",
+      "sys-002"
+    ]
+  },
+  {
+    "name": "Redis",
+    "category": "data",
+    "tier": 2,
+    "projectIds": [
+      "sys-001",
+      "sys-002",
+      "sys-003"
+    ]
+  },
+  {
+    "name": "MongoDB",
+    "category": "data",
+    "tier": 2,
+    "projectIds": []
+  },
+  {
+    "name": "IIS",
+    "category": "infra",
+    "tier": 2,
+    "projectIds": [
+      "sys-001",
+      "sys-002"
+    ]
+  },
+  {
+    "name": "Docker",
+    "category": "infra",
+    "tier": 2,
+    "projectIds": []
+  },
+  {
+    "name": "Vitest",
+    "category": "testing",
+    "tier": 2,
+    "projectIds": [
+      "sys-001",
+      "sys-002"
+    ]
+  },
+  {
+    "name": "RTL",
+    "category": "testing",
+    "tier": 2,
+    "projectIds": [
+      "sys-001",
+      "sys-002"
+    ]
+  },
+  {
+    "name": "xUnit",
+    "category": "testing",
+    "tier": 2,
+    "projectIds": [
+      "sys-001"
+    ]
+  },
+  {
+    "name": "Moq",
+    "category": "testing",
+    "tier": 2,
+    "projectIds": [
+      "sys-001"
+    ]
+  },
+  {
+    "name": "AWS",
+    "category": "infra",
+    "tier": 3,
+    "projectIds": []
+  },
+  {
+    "name": "Azure",
+    "category": "infra",
+    "tier": 3,
+    "projectIds": []
+  },
+  {
+    "name": "Vercel",
+    "category": "infra",
+    "tier": 3,
+    "projectIds": []
+  },
+  {
+    "name": "Kubernetes",
+    "category": "infra",
+    "tier": 3,
+    "projectIds": []
+  },
+  {
+    "name": "CI/CD",
+    "category": "infra",
+    "tier": 3,
+    "projectIds": []
+  },
+  {
+    "name": "Dynamics 365",
+    "category": "integrations",
+    "tier": 2,
+    "projectIds": [
+      "sys-005"
+    ]
+  },
+  {
+    "name": "BIR EIS",
+    "category": "integrations",
+    "tier": 2,
+    "projectIds": [
+      "sys-005"
+    ]
+  },
+  {
+    "name": "Firebase",
+    "category": "integrations",
+    "tier": 3,
+    "projectIds": []
+  },
+  {
+    "name": "Python",
+    "category": "ai-exploration",
+    "tier": 4,
+    "projectIds": []
+  },
+  {
+    "name": "FastAPI",
+    "category": "ai-exploration",
+    "tier": 4,
+    "projectIds": []
+  },
+  {
+    "name": "PyTorch",
+    "category": "ai-exploration",
+    "tier": 4,
+    "projectIds": []
+  },
+  {
+    "name": "RAG",
+    "category": "ai-exploration",
+    "tier": 4,
+    "projectIds": []
+  },
+  {
+    "name": "Vector DB",
+    "category": "ai-exploration",
+    "tier": 4,
+    "projectIds": []
+  },
+  {
+    "name": "LangChain",
+    "category": "ai-exploration",
+    "tier": 4,
+    "projectIds": []
+  },
+  {
+    "name": "Ollama",
+    "category": "ai-exploration",
+    "tier": 4,
+    "projectIds": []
+  },
+  {
+    "name": "Angular",
+    "category": "supporting",
+    "tier": 3,
+    "projectIds": []
+  },
+  {
+    "name": "GitHub Actions",
+    "category": "infra",
+    "tier": 2,
+    "projectIds": [
+      "sys-001",
+      "sys-002",
+      "sys-003"
+    ]
+  }
+]

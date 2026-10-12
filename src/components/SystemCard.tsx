@@ -58,13 +58,18 @@ export function SystemCard({ system, showDiagram = false }: SystemCardProps) {
         </div>
       )}
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Link href={`/systems/${system.id}`} className="font-mono text-xs link-underline">
           View Project
         </Link>
         <Link href={`/systems/${system.id}/inspect`} className="font-mono text-xs link-underline">
           Inspect System
         </Link>
+        {system.insideBuild && (
+          <Link href={`/systems/${system.id}/build`} className="font-mono text-xs link-underline">
+            Inside the Build
+          </Link>
+        )}
       </div>
     </article>
   );

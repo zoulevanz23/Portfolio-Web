@@ -1,0 +1,86 @@
+[
+  {
+    "id": "eng-001",
+    "title": "Diagnosing User-Specific OTP Verification Failure",
+    "date": "2026-08",
+    "problem": "A user was unable to complete OTP verification during registration even though the credentials and OTP appeared to be correct. Other users were able to complete the same registration flow successfully.",
+    "investigation": "Compared the failing user's behavior against successful registration attempts and examined the registration/session flow. Because the failure was isolated to a specific user rather than affecting the overall OTP mechanism, the investigation focused on state persistence and stale registration data rather than assuming the OTP service itself was broken.",
+    "rootCause": "Suspected stale session or cached registration state. Exact root cause was not conclusively documented.",
+    "solution": "Cleared/reset the affected registration state and corrected the registration flow so the user could retry verification with a clean state.",
+    "result": "The registration issue was resolved and the user was asked to retry the verification process.",
+    "lesson": "User-specific authentication failures should be investigated separately from system-wide authentication failures. A successful OTP service does not guarantee that the client/session state surrounding it is valid.",
+    "relatedSystemId": "sys-002"
+  },
+  {
+    "id": "eng-002",
+    "title": "Diagnosing ASP.NET Core IIS Deployment Failure",
+    "date": "2026-08",
+    "problem": "An ASP.NET Core application failed to start when hosted through IIS and returned HTTP Error 500.31.",
+    "investigation": "Investigated the IIS hosting environment, .NET installation/runtime availability, and the application's required ASP.NET Core runtime version.",
+    "rootCause": "Runtime/environment mismatch involving the required Microsoft.AspNetCore.App 8.0.x runtime.",
+    "solution": "Verified the installed .NET/ASP.NET Core runtime and aligned the deployment environment with the application's required .NET 8 runtime.",
+    "result": "Identified the deployment environment as the source of the startup failure rather than treating the application code itself as the primary problem.",
+    "lesson": "Deployment failures should be investigated from the environment inward. Runtime availability, hosting configuration, and application requirements need to be verified before rewriting application code.",
+    "relatedSystemId": "sys-001"
+  },
+  {
+    "id": "eng-003",
+    "title": "Integration Credential Failure — Internal Invoice Compliance System",
+    "date": "2026-02",
+    "problem": "Invoice transmission to the external electronic invoicing platform was failing for an extended period.",
+    "investigation": "Investigated integration configuration and authentication requirements rather than immediately modifying invoice-processing logic. Reviewed external API documentation to understand expected authentication flow and how the application consumed credentials. Verified existing integration credentials were no longer valid.",
+    "rootCause": "Integration credentials no longer valid, causing failed communication between internal application and external platform.",
+    "solution": "Verified status of existing credentials, obtained replacement credentials through administrative process, reviewed how application stored and retrieved configuration, updated configuration to use replacement credentials, reviewed API docs, tested communication, and investigated additional submission behavior after restoring authentication.",
+    "result": "Integration credentials successfully replaced and configured; gained working understanding of external API and invoice-submission process for later failures.",
+    "lesson": "Separate authentication problems from invoice-processing problems. Establish whether application can authenticate and communicate first before assuming business logic is broken. Flow: Application → Authentication → API Communication → Invoice Validation → Invoice Submission.",
+    "relatedSystemId": "sys-005"
+  },
+  {
+    "id": "eng-004",
+    "title": "Invoice Processing Failure: Index Out of Bounds",
+    "date": "2026-02",
+    "problem": "Invoice processing failed with Index was out of bounds error.",
+    "investigation": "Consulted system PIC/end user, reproduced issue, examined affected invoice records, traced application logic, reviewed how invoice statuses were handled, and compared expected flow with actual data. Found cancelled invoices were being included in same processing context as normal submission, creating mismatch between data and code assumptions.",
+    "rootCause": "Cancelled invoices included in same processing context as normal invoices, causing collection/index assumptions to be violated.",
+    "solution": "Separated cancelled-invoice handling from normal invoice-submission process so incompatible records would not enter same processing path. Implemented changes, reviewed approach before implementation, then validated through unit testing (normal, cancelled, edge cases), system testing (full workflow), and user validation with system PIC.",
+    "result": "Change committed, deployed through existing hosting environment, incident documented, and resolution approved through organizational review process. Original issue resolved and validated by end user.",
+    "lesson": "Fix the underlying processing assumption, not merely the error message. Different business states should not automatically share the same processing path.",
+    "relatedSystemId": "sys-005"
+  },
+  {
+    "id": "eng-005",
+    "title": "Customer Identifier Format Validation",
+    "date": "2026-04",
+    "problem": "Invoice processing failed because a customer identifier retrieved from upstream source did not match format expected by application. Expected Identifier but received Identifier + Branch Information, exceeding expected format and causing downstream validation to fail.",
+    "investigation": "Traced value through data flow: External/Source Data → Customer Retrieval → Application Validation → Invoice Processing. Found structurally different value at boundary between source data and application data model; issue originated at boundary, not from invoice itself.",
+    "rootCause": "Upstream source appended Branch Information to tax identifier; application validation expected strict Identifier format.",
+    "solution": "Proposed and, after supervisor approval, implemented explicit validation and normalization: validate incoming value, identify expected identifier component, remove unexpected appended data, ensure conformance to expected format, prevent malformed values from reaching downstream processing. Tested against valid, malformed, and edge cases; verified normalized values flowed through complete workflow; deployed through established process with documentation and review.",
+    "result": "Malformed upstream values now normalized at boundary; normalized invoices processed successfully and validated by PIC.",
+    "lesson": "Treat external or upstream data as untrusted input even when source is internal/trusted. Validation at system boundary prevents malformed data from propagating deeper.",
+    "relatedSystemId": "sys-005"
+  },
+  {
+    "id": "eng-006",
+    "title": "External E-Invoicing Integration Support",
+    "date": "2026-03",
+    "problem": "Broader e-invoicing integration required coordinated support between internal team, external development team, and external platform support.",
+    "investigation": "Reviewed authentication, application registration, credential requirements, sandbox requirements, API request expectations, validation behavior, and integration prerequisites from documentation. Investigated issues from both sides of integration boundary rather than treating external API as black box. Acted as technical bridge: Internal Application Team → External Development Team → External Platform Support. Determined what internal app needed to provide, what external devs needed to implement, and what platform required, and where failures originated.",
+    "rootCause": "Integration ownership gap across multiple parties requiring centralized technical coordination for credentials, certificates, sandbox, and documentation.",
+    "solution": "Handled technical inquiries, supported external developers, managed integration requirements, assisted with credential and certificate setup, prepared sandbox environment, reviewed docs, coordinated with platform support, validated credentials and docs, investigated issues, and communicated requirements between stakeholders.",
+    "result": "Provided sustained integration support enabling external team implementation; strengthened ability to learn unfamiliar external system via docs and cross-team communication.",
+    "lesson": "Integration ownership requires understanding requirements well enough to bridge internal, external dev, and platform support — not just referencing docs when errors occur.",
+    "relatedSystemId": "sys-005"
+  },
+  {
+    "id": "eng-007",
+    "title": "Ongoing Incident Response and Maintenance",
+    "date": "2026-05",
+    "problem": "System remains ongoing production responsibility requiring structured approach to reproduce, observe, hypothesize, validate, solve, review, implement, test, deploy, and document incidents.",
+    "investigation": "Developed structured 10-step approach: 1 Reproduce exact behavior, 2 Observe error messages, UI state, DB records, API responses, config, logs, 3 Form hypothesis from evidence, 4 Validate against code, DB, flow, docs, production/test data, 5 Determine appropriate solution (logic, validation, data handling, config, integration, error handling, process separation), 6 Review with supervisor/PIC for important business processes, 7 Implement smallest appropriate change, 8 Test via unit, system, integration, manual, end-user/PIC validation, 9 Deploy via established process, 10 Document problem, root cause, investigation, resolution, testing, deployment, validation, approval.",
+    "rootCause": "Legacy enterprise system requires disciplined maintenance to minimize risk while ensuring traceability of changes.",
+    "solution": "Applied Understand → Isolate → Fix → Validate → Deploy discipline; minimize refactoring during incident resolution; document decision not just code: What happened → Why → What was changed → Why that solution → How tested → How deployed.",
+    "result": "Established traceable record of what changed and why, enabling future maintenance and troubleshooting across application, API integration, authentication, certificates, sandbox, support, and cross-team communication boundaries.",
+    "lesson": "Enterprise engineering is rarely just writing new code; it is turning ambiguous failures into concrete technical problems, gathering evidence, controlling changes, and proving business problem solved.",
+    "relatedSystemId": "sys-005"
+  }
+]

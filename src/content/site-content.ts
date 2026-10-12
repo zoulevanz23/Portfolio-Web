@@ -16,6 +16,23 @@ export interface SystemNode {
   };
 }
 
+export interface InsideBuildFlowStep {
+  label: string;
+  detail: string;
+}
+
+export interface InsideBuildDecision {
+  choice: string;
+  why: string;
+}
+
+export interface InsideBuild {
+  problem: string;
+  context?: string;
+  flow: InsideBuildFlowStep[];
+  decisions: InsideBuildDecision[];
+}
+
 export interface System {
   id: string;
   name: string;
@@ -25,6 +42,7 @@ export interface System {
   summary: string;
   narrative: string;
   sellingPoints: string[];
+  insideBuild?: InsideBuild;
   architecture: {
     nodes: SystemNode[];
     connections: { from: string; to: string }[];
@@ -90,8 +108,9 @@ export interface CVSection {
 export const identity = {
   name: "Josh Ivan Sartin",
   role: "Fullstack Developer",
-  yearsExperience: "1.5+",
-  yearsDevelopment: "2+",
+  // Anchor dates for auto-computed KPI stats (update these, not the display strings).
+  experienceStart: "2025-02-01",
+  developmentStart: "2024-09-01",
   thesis:
     "I build full-stack systems that turn real-world business processes into reliable, maintainable software.",
   email: "Available on request",
@@ -99,11 +118,26 @@ export const identity = {
   linkedin: "https://linkedin.com/in/joshivan",
 };
 
+// Full months between two dates, ignoring day-of-month.
+function fullMonthsBetween(start: Date, end: Date): number {
+  return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+}
+
+// "1y 7m+", "2y+", "5mo+" ... month-precision so the display ticks every month.
+// Pass `now` for testability; defaults to the current date at call time.
+export function yearsSince(startIso: string, now: Date = new Date()): string {
+  const months = Math.max(0, fullMonthsBetween(new Date(startIso), now));
+  if (months < 12) return `${months}mo+`;
+  const years = Math.floor(months / 12);
+  const remainder = months % 12;
+  return remainder === 0 ? `${years}y+` : `${years}y ${remainder}m+`;
+}
+
 export const proofStrip = [
   { label: "Systems Shipped", value: "3+" },
   { label: "Full-Stack Scope", value: "Frontend → API → DB" },
   { label: "Production Status", value: "2 in production" },
-  { label: "Current Stack", value: ".NET 8 / Next.js / TypeScript / SQL Server" },
+  { label: "Current Stack", value: ".NET 8 / Next.js / TypeScript / SQL Server" }
 ];
 
 export const now = {
@@ -167,14 +201,14 @@ export const blogPosts: BlogPost[] = [];
 export const systems: System[] = [
   {
     id: "sys-001",
-    name: "Wastewater Parameter Monitoring System (WWLAB)",
+    name: "Wastewater Parameter Monitoring System",
     function: "Monitors wastewater quality parameters and evaluates laboratory measurements against environmental standards.",
     stack: ["React 18", "TypeScript", "Tailwind CSS", "Redux Toolkit", "Recharts", "TanStack Table", "ASP.NET Core 8", "C#", "Entity Framework Core", "SignalR", "Redis", "QuestPDF", "ClosedXML", "MailKit", "SQL Server"],
     status: "production",
     summary:
       "A full-stack environmental compliance system for recording and monitoring wastewater laboratory measurements across multiple monitoring points. The system evaluates measured parameters against defined standards and surfaces Passed, Failed, and Critical results through dashboards and reporting workflows.",
     narrative:
-      "I built an end-to-end environmental compliance monitoring platform for Aisin Asia Pacific, a Toyota-group automotive parts manufacturer. The system tracks wastewater parameters across 9 facility sections — discharge, aeration, clarifiers, equalization — with a server-side judgment engine that automatically classifies every reading as Pass, Fail, or Critical against Philippine regulatory and company-internal standards.",
+      "I built an end-to-end environmental compliance monitoring platform for an automotive parts manufacturer. The system tracks wastewater parameters across 9 facility sections — discharge, aeration, clarifiers, equalization — with a server-side judgment engine that automatically classifies every reading as Pass, Fail, or Critical against national regulatory and company-internal standards.",
     sellingPoints: [
       "13-table SQL Server schema with temporal tables for audit compliance",
       "Transactional outbox pattern for reliable email notifications",
@@ -185,6 +219,24 @@ export const systems: System[] = [
       "Redis-backed KPI caching with employee-scoped keys",
       "Full audit trail logging with user attribution and IP address tracking",
     ],
+    insideBuild: {
+      problem:
+        "Users previously had to manually compare laboratory values against acceptable standards. Readings were recorded on paper or spreadsheets, then checked by eye against national regulatory limits and stricter company-internal thresholds — slow, error-prone, and with no audit trail when a critical value slipped through.",
+      context: "9 facility sections — discharge, aeration, clarifiers, equalization — each with its own parameter set and limits.",
+      flow: [
+        { label: "Input", detail: "Lab personnel record wastewater measurements per monitoring point and parameter." },
+        { label: "Validation", detail: "API rejects malformed readings early — range, format, and required-field checks before any business logic runs." },
+        { label: "Standard Evaluation", detail: "Server-side judgment engine compares each reading against regulatory and company-internal standards." },
+        { label: "Classification", detail: "Every reading is classified as Pass, Fail, or Critical, with temporal-table history for audit compliance." },
+        { label: "Dashboard", detail: "SignalR pushes live results to dashboards; Redis caches KPI aggregates with employee-scoped keys." },
+        { label: "Report + Notify", detail: "Async PDF/Excel export via QuestPDF and ClosedXML; transactional outbox + MailKit fires reliable critical-value email notifications." },
+      ],
+      decisions: [
+        { choice: ".NET 8 / ASP.NET Core / EF Core", why: "Strong ecosystem for enterprise applications and integration with existing Microsoft infrastructure. EF Core maps cleanly to the 13-table schema while stored procedures and views handle reporting-heavy reads." },
+        { choice: "SQL Server with temporal tables", why: "Relational structure fits the application's reporting and transactional requirements. Temporal tables give an automatic audit trail for compliance without hand-rolled history tables." },
+        { choice: "React + SignalR + Redis", why: "Component-driven UI with strong support for data-heavy applications. SignalR delivers live monitoring updates and Redis-backed KPI caching keeps dashboard queries off the transactional database." },
+      ],
+    },
     architecture: {
       nodes: [
         {
@@ -237,24 +289,41 @@ export const systems: System[] = [
   },
   {
     id: "sys-002",
-    name: "Employee Portal (RCMS)",
+    name: "Employee Portal",
     function: "Centralizes employee information, calendars, training-related information, and employee-facing HR functionality.",
     stack: ["React 18", "TypeScript", "Vite", "Tailwind CSS", "Axios", "Zod", "React Router 6", "ASP.NET Core 8", "C#", "Entity Framework Core", "FluentValidation", "MailKit", "Redis", "Polly", "Serilog", "SQL Server"],
     status: "production",
     summary:
       "A centralized employee portal designed to bring HR-related employee information and functionality into one application. Replaces a manual process where 500+ employees had to contact HR or navigate multiple legacy systems just to view their own data.",
     narrative:
-      "I built a self-service HR portal for a Toyota-group manufacturing company, replacing a manual process where 500+ employees had to contact HR or navigate multiple legacy systems just to view their own data. The system gives every employee a single dashboard showing their profile, government IDs, employment history, timekeeping, leave, overtime, and training records — all read from the company's existing SQL Server HR database through Entity Framework views and table-valued functions.",
+      "I built a self-service HR portal for a manufacturing company, replacing a manual process where 500+ employees had to contact HR or navigate multiple legacy systems just to view their own data. The system gives every employee a single dashboard showing their profile, government IDs, employment history, timekeeping, leave, overtime, and training records — all read from the company's existing SQL Server HR database through Entity Framework views and table-valued functions.",
     sellingPoints: [
       "13 RESTful API controllers with ~60+ endpoints across auth, profile, timekeeping, leave, overtime, training, dashboard, FAQ, feedback, admin, and SSO",
       "Cross-application SSO token generation for seamless access to Transportation Reimbursement app",
       "JWT auth with HttpOnly cookies + CSRF + refresh token rotation + progressive lockout (3 attempts → 2→6→12 min)",
-      "Dual-database architecture — RCMSDBLive (read-only HR views/TVFs) + EPDBLive (writable SSO tables)",
+      "Dual-database architecture — HR database (read-only views/TVFs) + portal database (writable SSO tables)",
       "Redis distributed caching with employee-scoped cache keys and configurable TTLs (30s–600s)",
       "Documented CI/CD pipeline with GitHub Actions, self-hosted runner, zero-downtime deployment",
       "PBKDF2 password hashing with 100K iterations, 256-bit salt and hash",
       "Security headers: HSTS, X-Frame-Options DENY, X-XSS-Protection, Referrer-Policy",
     ],
+    insideBuild: {
+      problem:
+        "Over 500 employees had to contact HR or navigate multiple legacy systems just to view their own data — profile, government IDs, employment history, timekeeping, leave, overtime, and training records. Every lookup cost HR staff time and left employees without a single source of truth.",
+      context: "Company HR data already existed in SQL Server but was only reachable through legacy screens and manual requests.",
+      flow: [
+        { label: "HR Source", detail: "Existing HR database exposed read-only through Entity Framework views and table-valued functions — no migration of legacy data." },
+        { label: "API Aggregation", detail: "13 controllers with ~60+ endpoints aggregate profile, timekeeping, leave, overtime, and training into per-employee responses." },
+        { label: "Cache", detail: "Redis distributed cache with employee-scoped keys and 30s–600s TTLs keeps repeated dashboard loads off the HR database." },
+        { label: "Dashboard", detail: "Single self-service dashboard per employee replaces the contact-HR loop for everyday lookups." },
+        { label: "SSO Handoff", detail: "Cross-application SSO token generation carries the session seamlessly into the Transportation Reimbursement app." },
+      ],
+      decisions: [
+        { choice: "Dual-database architecture", why: "The HR database stays read-only against the legacy HR schema while a separate portal database holds writable SSO tables. This isolates new writes from regulated HR data and avoids risky schema changes." },
+        { choice: "JWT in HttpOnly cookies + CSRF + refresh rotation", why: "Cookie storage keeps tokens out of JavaScript reach while rotation and progressive lockout (3 attempts → 2→6→12 min) contain brute-force and theft scenarios for 500+ accounts." },
+        { choice: "React + Vite with FluentValidation and Zod", why: "Component-driven UI with strong support for data-heavy applications. Server-side FluentValidation enforces business rules while Zod mirrors them on the client for instant feedback." },
+      ],
+    },
     architecture: {
       nodes: [
         {
@@ -284,7 +353,7 @@ export const systems: System[] = [
           type: "database",
           details: {
             dataAccess: "Entity Framework Core",
-            notes: "Dual-database: RCMSDBLive (read-only HR views/TVFs) + EPDBLive (writable SSO tables)",
+            notes: "Dual-database: HR database (read-only views/TVFs) + portal database (writable SSO tables)",
           },
         },
         {
@@ -312,7 +381,7 @@ export const systems: System[] = [
     summary:
       "A complete enterprise LOB web application for managing transportation and OT-extension expense claims with map-verified routes, multi-level approval workflows, and real-time analytics dashboards.",
     narrative:
-      "I built an end-to-end expense reimbursement platform for a Toyota-group company. Employees submit transportation and OT-extension claims with map-verified routes; approvers move them through a Supervisor→Manager→DGM signing chain; admins get a real-time analytics dashboard.",
+      "I built an end-to-end expense reimbursement platform for a manufacturing company. Employees submit transportation and OT-extension claims with map-verified routes; approvers move them through a Supervisor→Manager→DGM signing chain; admins get a real-time analytics dashboard.",
     sellingPoints: [
       "Auth with SSO + lockout + audit, role-based multi-level approval state machine",
       "PDF generation, dashboards, real routing API, external workflow automation",
@@ -321,6 +390,24 @@ export const systems: System[] = [
       "Refresh-token rotation, CSRF tokens, BCrypt, rate limiting, security headers",
       "Full test coverage on both frontend and backend tiers",
     ],
+    insideBuild: {
+      problem:
+        "Transportation and OT-extension claims were filed manually with unverified routes and a paper Supervisor → Manager → DGM signing chain. Finance had no reliable distance basis for payouts and approvers had no shared view of claim state.",
+      context: "Claims, approvals, payouts, and analytics all lived in separate manual steps with no map verification.",
+      flow: [
+        { label: "Claim Input", detail: "Employees submit transportation and OT-extension claims with route endpoints and supporting details." },
+        { label: "Map Route Verify", detail: "Leaflet plus a real routing API verifies claimed distances before a claim can advance." },
+        { label: "State Machine", detail: "Role-based multi-level approval state machine enforces the Supervisor → Manager → DGM signing order." },
+        { label: "Approval Chain", detail: "Approvers act in sequence with audit logging; SSO introspection carries identity from the Employee Portal." },
+        { label: "PDF + Notify", detail: "PDF generation for records plus a Power Automate flow sends approval notifications." },
+        { label: "Analytics", detail: "Real-time dashboards aggregate claim volume, amounts, and cycle time for admins." },
+      ],
+      decisions: [
+        { choice: "Next.js with TanStack Query", why: "Component-driven UI with strong support for data-heavy applications. TanStack Query keeps approval queues, claim detail, and analytics dashboards in sync without hand-rolled fetching logic." },
+        { choice: "ASP.NET Core Minimal APIs with DBA-fixed SQL contract", why: "Minimal APIs keep the claim and approval surface lean while EF Core plus stored procedures respect the DBA-owned HR database contract." },
+        { choice: "Redis with refresh rotation and rate limiting", why: "Centralized session and rate-limit state protects login and claim-submission endpoints while refresh-token rotation and CSRF keep the multi-role approval flow secure." },
+      ],
+    },
     architecture: {
       nodes: [
         {
@@ -447,50 +534,53 @@ export const systems: System[] = [
   },
   {
     id: "sys-005",
-    name: "Microsoft Dynamics 365 ↔ BIR EIS Integration",
-    function: "Integrates business transaction/invoice functionality with the BIR Electronic Invoicing System environment.",
-    stack: ["Microsoft Dynamics 365", ".NET", "BIR EIS"],
+    name: "Internal Invoice Compliance System",
+    function: "Processes and transmits company invoices to an external electronic invoicing platform through an API integration.",
+    stack: [".NET", "C#", "Entity Framework Core", "SQL Server", "External E-Invoicing API", "Sandbox Environment", "Integration Credentials"],
     status: "production",
     summary:
-      "Worked on integration and configuration activities connecting Microsoft Dynamics 365 with the BIR Electronic Invoicing System. Work included certificate acquisition, application-key configuration, sandbox application setup, testing support, and invoice-related fixes.",
+      "An internal enterprise application responsible for processing and transmitting company invoices to an external electronic invoicing platform. Inherited as a legacy production system with extended transmission issues; anonymized to omit credentials, customer info, infra details, endpoints, and confidential business information.",
     narrative:
-      "Supported external company integration of electronic invoicing system (BIR EIS). Handled certificate acquisition, application-key configuration, sandbox application setup, testing support, and invoice-related fixes that prevented regulatory penalties.",
+      "Inherited as a legacy production system that had experienced invoice transmission issues over an extended period. Not the original author, so initial priority was understanding architecture, data flow, business rules, and external API requirements before modifying code. Scope spanned legacy investigation, database and data-flow analysis, API documentation review, credential management, input validation, unit and system testing, end-user validation, deployment, and incident documentation. Acted as technical bridge between internal team, external developers, and external platform support.",
     sellingPoints: [
-      "Real-world enterprise integration with government regulatory system",
-      "Certificate acquisition and application-key configuration",
-      "Sandbox application setup and testing support",
-      "Invoice-related fixes preventing regulatory penalties",
+      "Anonymized enterprise integration — no credentials, customer info, infra details, endpoints, or confidential business data exposed",
+      "Legacy discovery before modification: codebase, data flow, and API requirements investigation",
+      "Integration credential replacement and configuration after authentication failure (Application → Authentication → API Communication → Validation → Submission)",
+      "Separated cancelled-invoice handling from normal submission to fix Index out of bounds",
+      "Upstream identifier validation and normalization at system boundary (Identifier + Branch Information)",
+      "Sandbox setup, certificate-related support, and application credential management",
+      "Multi-level testing: unit, system, integration, and end-user validation with approval process",
+      "Production deployment through established hosting with documented incident and decision records",
     ],
+    insideBuild: {
+      problem:
+        "Legacy invoice compliance system failed to transmit invoices to external platform after years in production; failures spanned authentication, data, and integration boundaries.",
+      context: "Enterprise Invoice Processing / External API Integration — anonymized. 2026–Present. Role: Developer / System Support / Integration PIC. Portfolio Note: system and organization anonymized; credentials, customer info, infra, endpoints, and confidential business info intentionally omitted.",
+      flow: [
+        { label: "Source Data", detail: "Invoice and customer data retrieved from upstream source; treated as untrusted input." },
+        { label: "Boundary Validation", detail: "Validate customer identifier format; normalize Identifier + Branch Information before downstream processing." },
+        { label: "Authentication", detail: "Authenticate to external platform using integration credentials; separated from invoice logic for clear troubleshooting." },
+        { label: "Processing", detail: "Separate cancelled invoices from normal submission path to avoid collection/index assumptions." },
+        { label: "Submission", detail: "Transmit invoice via external API; handle Index out of bounds and format validation failures." },
+        { label: "Testing & Deployment", detail: "Unit, system, end-user validation, then commit and deploy through established hosting with review and approval." },
+      ],
+      decisions: [
+        { choice: "Understand before modifying legacy system", why: "Reduces risk of fixing one problem while creating another when inheriting unfamiliar codebase." },
+        { choice: "Separate authentication from invoice-processing", why: "Clear troubleshooting path: Application → Authentication → API Communication → Validation → Submission." },
+        { choice: "Validate and normalize at integration boundary", why: "Prevents malformed upstream data from propagating into downstream business logic." },
+      ],
+    },
     architecture: {
       nodes: [
-        {
-          id: "ext",
-          label: "Microsoft Dynamics 365",
-          type: "external",
-          details: {
-            notes: "Source system for business transactions and invoices.",
-          },
-        },
-        {
-          id: "api",
-          label: "Integration / API Layer",
-          type: "api",
-          details: {
-            validation: "External-system validation + invoice/business-rule validation",
-          },
-        },
-        {
-          id: "eis",
-          label: "BIR Electronic Invoicing System",
-          type: "external",
-          details: {
-            notes: "BIR EIS sandbox application setup, application key configuration, certificate acquisition, invoice-related fixes, integration testing.",
-          },
-        },
+        { id: "source", label: "Upstream Data Source", type: "external", details: { notes: "Source of invoice and customer records; treated as untrusted input." } },
+        { id: "app", label: "Internal Invoice Compliance System", type: "api", details: { framework: ".NET / Entity Framework Core", validation: "Boundary validation + identifier normalization", notes: "Anonymized — no infra details. Handles cancelled vs normal flows separately." } },
+        { id: "ext", label: "External Electronic Invoicing Platform", type: "external", details: { notes: "External API; sandbox + production; anonymized endpoints and credentials omitted." } },
+        { id: "db", label: "SQL Server", type: "database", details: { dataAccess: "Entity Framework Core", notes: "Anonymized data-flow; no business-sensitive schema exposed." } },
       ],
       connections: [
-        { from: "ext", to: "api" },
-        { from: "api", to: "eis" },
+        { from: "source", to: "app" },
+        { from: "app", to: "ext" },
+        { from: "app", to: "db" },
       ],
     },
   },
@@ -537,6 +627,66 @@ export const engineeringLog: EngineeringLogEntry[] = [
       "Deployment failures should be investigated from the environment inward. Runtime availability, hosting configuration, and application requirements need to be verified before rewriting application code.",
     relatedSystemId: "sys-001",
   },
+  {
+    id: "eng-003",
+    title: "Integration Credential Failure — Internal Invoice Compliance System",
+    date: "2026-02",
+    problem: "Invoice transmission to the external electronic invoicing platform was failing for an extended period.",
+    investigation: "Investigated integration configuration and authentication requirements rather than immediately modifying invoice-processing logic. Reviewed external API documentation to understand expected authentication flow and how the application consumed credentials. Verified existing integration credentials were no longer valid.",
+    rootCause: "Integration credentials no longer valid, causing failed communication between internal application and external platform.",
+    solution: "Verified status of existing credentials, obtained replacement credentials through administrative process, reviewed how application stored and retrieved configuration, updated configuration to use replacement credentials, reviewed API docs, tested communication, and investigated additional submission behavior after restoring authentication.",
+    result: "Integration credentials successfully replaced and configured; gained working understanding of external API and invoice-submission process for later failures.",
+    lesson: "Separate authentication problems from invoice-processing problems. Establish whether application can authenticate and communicate first before assuming business logic is broken. Flow: Application → Authentication → API Communication → Invoice Validation → Invoice Submission.",
+    relatedSystemId: "sys-005",
+  },
+  {
+    id: "eng-004",
+    title: "Invoice Processing Failure: Index Out of Bounds",
+    date: "2026-02",
+    problem: "Invoice processing failed with Index was out of bounds error.",
+    investigation: "Consulted system PIC/end user, reproduced issue, examined affected invoice records, traced application logic, reviewed how invoice statuses were handled, and compared expected flow with actual data. Found cancelled invoices were being included in same processing context as normal submission, creating mismatch between data and code assumptions.",
+    rootCause: "Cancelled invoices included in same processing context as normal invoices, causing collection/index assumptions to be violated.",
+    solution: "Separated cancelled-invoice handling from normal invoice-submission process so incompatible records would not enter same processing path. Implemented changes, reviewed approach before implementation, then validated through unit testing (normal, cancelled, edge cases), system testing (full workflow), and user validation with system PIC.",
+    result: "Change committed, deployed through existing hosting environment, incident documented, and resolution approved through organizational review process. Original issue resolved and validated by end user.",
+    lesson: "Fix the underlying processing assumption, not merely the error message. Different business states should not automatically share the same processing path.",
+    relatedSystemId: "sys-005",
+  },
+  {
+    id: "eng-005",
+    title: "Customer Identifier Format Validation",
+    date: "2026-04",
+    problem: "Invoice processing failed because a customer identifier retrieved from upstream source did not match format expected by application. Expected Identifier but received Identifier + Branch Information, exceeding expected format and causing downstream validation to fail.",
+    investigation: "Traced value through data flow: External/Source Data → Customer Retrieval → Application Validation → Invoice Processing. Found structurally different value at boundary between source data and application data model; issue originated at boundary, not from invoice itself.",
+    rootCause: "Upstream source appended Branch Information to tax identifier; application validation expected strict Identifier format.",
+    solution: "Proposed and, after supervisor approval, implemented explicit validation and normalization: validate incoming value, identify expected identifier component, remove unexpected appended data, ensure conformance to expected format, prevent malformed values from reaching downstream processing. Tested against valid, malformed, and edge cases; verified normalized values flowed through complete workflow; deployed through established process with documentation and review.",
+    result: "Malformed upstream values now normalized at boundary; normalized invoices processed successfully and validated by PIC.",
+    lesson: "Treat external or upstream data as untrusted input even when source is internal/trusted. Validation at system boundary prevents malformed data from propagating deeper.",
+    relatedSystemId: "sys-005",
+  },
+  {
+    id: "eng-006",
+    title: "External E-Invoicing Integration Support",
+    date: "2026-03",
+    problem: "Broader e-invoicing integration required coordinated support between internal team, external development team, and external platform support.",
+    investigation: "Reviewed authentication, application registration, credential requirements, sandbox requirements, API request expectations, validation behavior, and integration prerequisites from documentation. Investigated issues from both sides of integration boundary rather than treating external API as black box. Acted as technical bridge: Internal Application Team → External Development Team → External Platform Support. Determined what internal app needed to provide, what external devs needed to implement, and what platform required, and where failures originated.",
+    rootCause: "Integration ownership gap across multiple parties requiring centralized technical coordination for credentials, certificates, sandbox, and documentation.",
+    solution: "Handled technical inquiries, supported external developers, managed integration requirements, assisted with credential and certificate setup, prepared sandbox environment, reviewed docs, coordinated with platform support, validated credentials and docs, investigated issues, and communicated requirements between stakeholders.",
+    result: "Provided sustained integration support enabling external team implementation; strengthened ability to learn unfamiliar external system via docs and cross-team communication.",
+    lesson: "Integration ownership requires understanding requirements well enough to bridge internal, external dev, and platform support — not just referencing docs when errors occur.",
+    relatedSystemId: "sys-005",
+  },
+  {
+    id: "eng-007",
+    title: "Ongoing Incident Response and Maintenance",
+    date: "2026-05",
+    problem: "System remains ongoing production responsibility requiring structured approach to reproduce, observe, hypothesize, validate, solve, review, implement, test, deploy, and document incidents.",
+    investigation: "Developed structured 10-step approach: 1 Reproduce exact behavior, 2 Observe error messages, UI state, DB records, API responses, config, logs, 3 Form hypothesis from evidence, 4 Validate against code, DB, flow, docs, production/test data, 5 Determine appropriate solution (logic, validation, data handling, config, integration, error handling, process separation), 6 Review with supervisor/PIC for important business processes, 7 Implement smallest appropriate change, 8 Test via unit, system, integration, manual, end-user/PIC validation, 9 Deploy via established process, 10 Document problem, root cause, investigation, resolution, testing, deployment, validation, approval.",
+    rootCause: "Legacy enterprise system requires disciplined maintenance to minimize risk while ensuring traceability of changes.",
+    solution: "Applied Understand → Isolate → Fix → Validate → Deploy discipline; minimize refactoring during incident resolution; document decision not just code: What happened → Why → What was changed → Why that solution → How tested → How deployed.",
+    result: "Established traceable record of what changed and why, enabling future maintenance and troubleshooting across application, API integration, authentication, certificates, sandbox, support, and cross-team communication boundaries.",
+    lesson: "Enterprise engineering is rarely just writing new code; it is turning ambiguous failures into concrete technical problems, gathering evidence, controlling changes, and proving business problem solved.",
+    relatedSystemId: "sys-005",
+  },
 ];
 
 // --- DECISION LOG ---
@@ -582,6 +732,51 @@ export const decisionLog: DecisionLogEntry[] = [
       "Adds infrastructure complexity and another dependency in exchange for better scalability and centralized cache/rate-limit state.",
     relatedSystemId: "sys-001",
   },
+  {
+    id: "dec-005",
+    title: "Separate Authentication from Invoice Processing",
+    decision: "Establish whether application can authenticate and communicate with external e-invoicing platform before investigating business logic failures.",
+    why: "Provides clearer troubleshooting path: Application → Authentication → API Communication → Invoice Validation → Invoice Submission. Prevents conflating auth failures with application logic.",
+    alternative: "Assume every failed invoice is caused by application logic and modify processing directly.",
+    tradeoff: "Requires upfront investigation of credentials and API docs before code changes, in exchange for accurate root-cause isolation.",
+    relatedSystemId: "sys-005",
+  },
+  {
+    id: "dec-006",
+    title: "Separate Cancelled Invoice Handling from Normal Submission",
+    decision: "Split cancelled-invoice handling into a separate processing path so incompatible records do not enter normal submission context.",
+    why: "Cancelled invoices have different structure and assumptions; mixing them caused Index out of bounds by violating collection/index assumptions.",
+    alternative: "Make minimal change to suppress index error within shared path.",
+    tradeoff: "Additional branching and validation logic versus single-path simplicity, but prevents class of data-mismatch errors and aligns with business process separation.",
+    relatedSystemId: "sys-005",
+  },
+  {
+    id: "dec-007",
+    title: "Validate and Normalize Upstream Identifier at System Boundary",
+    decision: "Validate incoming customer tax identifier, identify expected component, strip unexpected Branch Information, and ensure conformance before downstream processing.",
+    why: "External/upstream data may be structurally different even from trusted internal sources; malformed values should not propagate.",
+    alternative: "Allow malformed Identifier + Branch Information to flow into invoice pipeline and fail downstream.",
+    tradeoff: "Extra validation/normalization step at boundary versus downstream failures and harder debugging.",
+    relatedSystemId: "sys-005",
+  },
+  {
+    id: "dec-008",
+    title: "Own Integration as Technical Bridge with Documentation-Driven Investigation",
+    decision: "Act as bridge between Internal Application Team, External Development Team, and External Platform Support, using API documentation as investigation tool rather than black box.",
+    why: "Integration required coordination of authentication, registration, credentials, sandbox, and request expectations across multiple parties.",
+    alternative: "Treat external API as black box and only reference docs when errors occur.",
+    tradeoff: "Time invested in reading and understanding external system upfront versus faster but fragmented troubleshooting and miscommunication.",
+    relatedSystemId: "sys-005",
+  },
+  {
+    id: "dec-009",
+    title: "Adopt Structured Incident Response: Reproduce → Document",
+    decision: "Use 10-step process: Reproduce → Observe → Hypothesize → Validate → Determine solution → Review → Implement → Test (unit/system/integration/end-user) → Deploy → Document (what/why/changed/tested/deployed). Document decision, not just code.",
+    why: "Creates traceable engineering record and minimizes risk in legacy systems by making smallest appropriate change after understanding existing behavior.",
+    alternative: "Make random changes until symptom disappears and deploy without layered testing or documentation.",
+    tradeoff: "More disciplined process and documentation overhead in exchange for controlled changes, confidence that business problem is solved, and future maintainability.",
+    relatedSystemId: "sys-005",
+  },
 ];
 
 // --- EXPERIENCE ---
@@ -590,44 +785,39 @@ export const experience: ExperienceEntry[] = [
   {
     id: "exp-001",
     role: "Fullstack Developer",
-    company: "Toyota Aisin Philippines, Inc.",
+      company: "Toyota Aisin Philippines, Inc ",
     period: "Oct 2025 — Present",
     outcomes: [
-      "Built and deployed 3 production enterprise applications used by 800+ employees, owning requirements analysis, system design, full-stack development, deployment, and production support.",
-      "Developed an employee self-service portal with 60+ RESTful API endpoints, integrating enterprise HR data and cross-application SSO.",
-      "Built a transportation reimbursement platform with map-verified routes, Supervisor → Manager → DGM approval workflows, PDF generation, and analytics dashboards.",
-      "Built an environmental compliance monitoring system that evaluates wastewater measurements against regulatory standards, automatically classifies results as Pass/Fail/Critical, maintains audit history, and triggers notifications for critical values.",
-      "Took ownership of the company's BIR EIS integration, resolving a critical production issue and providing ongoing technical support. Worked directly with the external development team on Microsoft Dynamics 365 integration, troubleshooting issues, providing technical guidance, and developing sandbox applications for integration testing.",
-      "Implemented JWT authentication, role-based access control, audit logging, and automated unit/integration testing across production applications.",
-      "Established CI/CD pipelines using GitHub Actions and deployed production applications through IIS.",
+      "Built and deployed 3 production enterprise applications serving 1000 employees, owning development across requirements analysis, system design, implementation, testing, deployment, and production support.",
+      "Diagnosed and resolved production failures in a legacy enterprise invoice-processing system integrated with an external electronic invoicing API, tracing issues across application code, database state, API behavior, authentication, and external documentation.",
+      "Coordinated with external developers and platform support to validate fixes, manage integration credentials and certificates, and deploy validated changes through IIS.",
+      "Developed an Employee Self-Service Portal used by 1000 employees, with 60+ REST API endpoints, enterprise HR-data integration, cross-application SSO, JWT authentication, role-based authorization, and Redis caching.",
+      "Built a Transportation Reimbursement System used by 200+ employees, implementing map-verified routes, multi-level approval workflows, automated PDF/Excel generation, dashboards, and real-time notifications.",
+      "Developed an Environmental Compliance Monitoring System that evaluates wastewater measurements against regulatory and internal standards through centralized business rules, automatically classifying results, maintaining audit history, and triggering critical-value notifications.",
+      "Implemented application security using JWT, HttpOnly cookies, RBAC, CSRF protection, refresh-token rotation, password hashing, and rate limiting.",
+      "Automated application build, test, and deployment workflows using GitHub Actions, deploying ASP.NET Core applications to IIS.",
     ],
     systemIds: ["sys-001", "sys-002", "sys-003", "sys-005"],
   },
   {
     id: "exp-002",
     role: "Freelance Fullstack Developer",
-    company: "Self-employed",
+      company: "Self-employed",
     period: "May 2025 — Sept 2025",
     outcomes: [
-      "Delivered end-to-end full-stack applications for clients, translating business requirements into technical specifications, system architecture, and production-ready solutions.",
-      "Designed database schemas and application architecture based on client workflows, data requirements, and expected usage.",
-      "Developed responsive web applications using React, Next.js, and TypeScript, implementing frontend interfaces, application logic, API integrations, and data-driven features.",
-      "Managed the complete development lifecycle, including requirements gathering, development, testing, deployment, and post-launch maintenance.",
-      "Deployed and maintained production applications on Vercel, supporting real end users and addressing issues throughout the application's lifecycle.",
+      "Translated client requirements into technical specifications, application designs, and production-ready web applications.",
+      "Developed and deployed applications using React, Next.js, TypeScript, Tailwind CSS, and REST APIs.",
     ],
     systemIds: [],
   },
   {
     id: "exp-003",
     role: "System Development Intern",
-    company: "Health Office Malvar",
+      company: "Municipal Health Office",
     period: "Feb 2025 — May 2025",
     outcomes: [
-      "Digitized manual, paper-based health office workflows, replacing paper records and manual data entry with internal software systems.",
-      "Developed an inventory management system using HTML, CSS, JavaScript, and PHP, with automated inventory counting and centralized stock tracking.",
-      "Replaced manual inventory calculations with automated quantity tracking, improving consistency and reducing repetitive data entry.",
-      "Packaged and deployed the system as a desktop application using Electron, enabling health office personnel to use the system directly on their work computers.",
-      "Deployed the application for actual day-to-day operational use, refining features and resolving issues based on user feedback and workflow requirements.",
+      "Replaced manual workflows with internal software systems that centralized operational records and reduced repetitive data entry.",
+      "Developed and deployed an inventory management system using JavaScript, PHP, and Electron.",
     ],
     systemIds: [],
   },
@@ -713,17 +903,85 @@ export const stack: StackItem[] = [
 
 export const credentials: Credential[] = [
   {
-    id: "cred-003",
-    type: "link",
-    title: "GitHub",
-    url: "https://github.com/joshivan",
+    id: "cred-005",
+    type: "certification",
+    title: "Foundational C# with Microsoft – Developer Certification",
+    issuer: "freeCodeCamp & Microsoft",
+    url: "https://www.freecodecamp.org/certification/joshivansartin/foundational-c-sharp-with-microsoft",
+    year: "2025-11-19",
   },
   {
-    id: "cred-004",
-    type: "link",
-    title: "LinkedIn",
-    url: "https://linkedin.com/in/joshivan",
+    id: "cred-006",
+    type: "certification",
+    title: "Getting Started with Generative AI",
+    issuer: "IBM SkillsBuild",
+    url: "https://www.credly.com/go/f8sja5U5",
+    year: "2026-09-01",
   },
+  {
+    id: "cred-007",
+    type: "certification",
+    title: "Basic PowerApps for Business",
+    issuer: "AISIN Asia Pacific Co., Ltd. — DX Promotion",
+    year: "2026-04-28",
+  },
+  {
+    id: "cred-008",
+    type: "certification",
+    title: "Basic PowerBI Desktop for Business",
+    issuer: "AISIN Asia Pacific Co., Ltd. — DX Promotion",
+    year: "2026-05-20",
+  },
+  {
+    id: "cred-009",
+    type: "certification",
+    title: "JavaScript Essentials 2",
+    issuer: "Cisco Networking Academy & OpenEDG JavaScript Institute",
+    year: "2026-08-26",
+  },
+  {
+    id: "cred-010",
+    type: "certification",
+    title: "Prompt Engineering",
+    issuer: "Free Academy.ai",
+    url: "https://freeacademy.ai/verify/FA-2026-PE-PZCA9G",
+    year: "2026-06-09",
+  },
+  {
+    id: "cred-011",
+    type: "certification",
+    title: "JavaScript Essentials 1",
+    issuer: "Cisco",
+    year: "2025-06",
+  },
+  {
+    id: "cred-012",
+    type: "certification",
+    title: "Foundations: Data, Data Everywhere",
+    issuer: "Coursera",
+    year: "2024-12",
+  },
+  {
+    id: "cred-013",
+    type: "certification",
+    title: "Endpoint Security",
+    issuer: "Cisco",
+    year: "2024-11",
+  },
+  {
+    id: "cred-014",
+    type: "certification",
+    title: "Cyber Threat Management",
+    issuer: "Cisco",
+    year: "2024-11",
+  },
+  {
+    id: "cred-015",
+    type: "certification",
+    title: "Introduction to Career Skills in Data Analytics",
+    issuer: "LinkedIn",
+    year: "2024-10",
+  }
 ];
 
 // --- CV ---
@@ -735,8 +993,7 @@ export const cvSections: CVSection[] = [
     items: [
       {
         label: "",
-        detail:
-          "Software Engineer experienced in building, deploying, and supporting production enterprise applications. Built 3 production systems used by 800+ employees, contributing across system design, full-stack development, REST API development, database design, security, testing, deployment, and production support. Experienced with C#, ASP.NET Core, React, Next.js, TypeScript, SQL Server, Redis, Python, and FastAPI, with additional experience in enterprise integrations, AI application development, and developer security tooling.",
+        detail: "Software Engineer experienced in building, deploying, and supporting production enterprise applications. Hands-on experience across system design, full-stack development, REST APIs, database design, application security, testing, CI/CD, and production support. Strongest in C#, ASP.NET Core, React, TypeScript, and SQL Server, with experience delivering secure enterprise systems, external integrations, and production deployments."
       },
     ],
   },
@@ -745,19 +1002,19 @@ export const cvSections: CVSection[] = [
     title: "Experience",
     items: [
       {
-        label: "Fullstack Developer — Toyota Aisin Philippines, Inc.",
-        period: "Oct 2025 — Present",
-        detail: "Built and deployed 3 production enterprise applications used by 800+ employees across requirements analysis, system design, development, testing, deployment, and production support. Developed an Employee Self-Service Portal with 60+ RESTful API endpoints, integrating enterprise HR data, JWT authentication, Redis caching, and cross-application SSO. Built a Transportation Reimbursement System with map-verified routes, multi-level approval workflows, PDF/Excel generation, dashboards, and real-time notifications. Developed an Environmental Compliance Monitoring System that evaluates wastewater measurements against regulatory standards and automatically classifies results as Pass/Fail/Critical, with audit history and critical-value notifications. Resolved a critical BIR EIS integration issue with Microsoft Dynamics 365, becoming the primary internal support contact. Implemented application security using JWT, HttpOnly cookies, role-based authorization, CSRF protection, refresh-token rotation, password hashing, and rate limiting. Established CI/CD pipelines using GitHub Actions and deployed through IIS.",
+        label: "Fullstack Developer — Automotive parts manufacturer, Philippines",
+        detail: "Built and deployed 3 production enterprise applications serving 1000 employees, owning development across requirements analysis, system design, implementation, testing, deployment, and production support. Diagnosed and resolved production failures in a legacy enterprise invoice-processing system integrated with an external electronic invoicing API, tracing issues across application code, database state, API behavior, authentication, and external documentation. Coordinated with external developers and platform support to validate fixes, manage integration credentials and certificates, and deploy validated changes through IIS. Developed an Employee Self-Service Portal used by 1000 employees, with 60+ REST API endpoints, enterprise HR-data integration, cross-application SSO, JWT authentication, role-based authorization, and Redis caching. Built a Transportation Reimbursement System used by 200+ employees, implementing map-verified routes, multi-level approval workflows, automated PDF/Excel generation, dashboards, and real-time notifications. Developed an Environmental Compliance Monitoring System that evaluates wastewater measurements against regulatory and internal standards through centralized business rules, automatically classifying results, maintaining audit history, and triggering critical-value notifications. Implemented application security using JWT, HttpOnly cookies, RBAC, CSRF protection, refresh-token rotation, password hashing, and rate limiting. Automated application build, test, and deployment workflows using GitHub Actions, deploying ASP.NET Core applications to IIS.",
+        period: "Oct 2025 — Present"
       },
       {
         label: "Freelance Fullstack Developer — Self-Employed",
-        period: "May 2025 — Sept 2025",
-        detail: "Delivered end-to-end web applications by translating client requirements into technical specifications, system designs, and production-ready implementations. Built responsive applications using React, Next.js, TypeScript, Tailwind CSS, and REST APIs. Managed development through deployment, maintenance, and post-launch support.",
+        detail: "Translated client requirements into technical specifications, application designs, and production-ready web applications. Developed and deployed applications using React, Next.js, TypeScript, Tailwind CSS, and REST APIs.",
+        period: "May 2025 — Sept 2025"
       },
       {
-        label: "System Development Intern — Health Office Malvar",
-        period: "Feb 2025 — May 2025",
-        detail: "Digitized paper-based workflows by replacing manual records and repetitive data entry with internal software systems. Built an inventory management system using HTML, CSS, JavaScript, and PHP with automated inventory counting and centralized stock tracking. Packaged and deployed the system as a desktop application using Electron for operational use.",
+        label: "System Development Intern — Municipal Health Office",
+        detail: "Replaced manual workflows with internal software systems that centralized operational records and reduced repetitive data entry. Developed and deployed an inventory management system using JavaScript, PHP, and Electron.",
+        period: "Feb 2025 — May 2025"
       },
     ],
   },
@@ -766,16 +1023,12 @@ export const cvSections: CVSection[] = [
     title: "Personal Projects",
     items: [
       {
-        label: "SmartWay — AI Study Companion",
-        detail: "React, TypeScript, Vite, Node.js, Express, Google Gemini API, Supabase. AI-powered study companion that transforms PDF, Word, and text documents into summaries, flashcards, and quizzes. Handles files up to 50 MB and text inputs up to 200,000 characters with validation, cloud storage, and production deployment.",
-      },
-      {
-        label: "TruthCheck AI — AI Scam & Misinformation Analyzer",
-        detail: "React, TypeScript, Node.js, Express, Google Gemini API. AI-powered platform that analyzes messages, suspicious links, and news articles for phishing, scams, and misinformation. Implements rate limiting, input validation, CORS, Helmet security headers, and privacy-first no-login architecture.",
-      },
-      {
         label: "Cipher — Developer Security & Vulnerability Analysis Tool",
-        detail: "Python, FastAPI, React, TypeScript, SQLite, VS Code Extension API. Developer security tool for dependency vulnerability analysis and CVE enrichment, integrating OSV, NIST NVD, GitHub Advisory, npm, and PyPI APIs. Includes FastAPI REST API, React interface, and VS Code extension with inline diagnostics and SARIF integration.",
+        detail: "Python, FastAPI, React, TypeScript, SQLite, VS Code Extension API. Built a dependency vulnerability analysis tool integrating OSV, NIST NVD, GitHub Advisory, npm, and PyPI vulnerability data. Developed a FastAPI backend, React interface, and VS Code extension with inline diagnostics and SARIF integration for CI workflows."
+      },
+      {
+        label: "SmartWay — AI Study Companion",
+        detail: "React, TypeScript, Vite, Node.js, Express, Supabase, Google Gemini API. Built an AI study platform that transforms PDF, Word, and text documents into summaries, flashcards, and quizzes. Implemented file validation, cloud storage, input constraints, and production deployment."
       },
     ],
   },
@@ -784,28 +1037,28 @@ export const cvSections: CVSection[] = [
     title: "Technical Skills",
     items: [
       {
-        label: "Languages",
-        detail: "C#, TypeScript, JavaScript, Python, SQL, PHP, HTML, CSS",
+        label: "Programming",
+        detail: "C#, TypeScript, JavaScript, Python, SQL"
       },
       {
         label: "Frontend",
-        detail: "React, Next.js, Vite, Tailwind CSS, Redux Toolkit, TanStack Query, Chart.js, Recharts, Leaflet",
+        detail: "React, Next.js, Vite, Tailwind CSS, Redux Toolkit, TanStack Query"
       },
       {
         label: "Backend",
-        detail: "ASP.NET Core, .NET 8, FastAPI, Node.js, Express, Entity Framework Core, RESTful APIs, SignalR",
+        detail: "ASP.NET Core, .NET 8, Entity Framework Core, FastAPI, Node.js, REST APIs, SignalR"
       },
       {
-        label: "Databases & DevOps",
-        detail: "SQL Server, SQLite, Redis | GitHub Actions, IIS, Docker, Vercel",
+        label: "Databases & Infrastructure",
+        detail: "SQL Server, SQLite, Redis, Docker, IIS"
       },
       {
         label: "Testing & Security",
-        detail: "xUnit, Moq, Vitest, RTL | JWT, CSRF, BCrypt, Rate Limiting, Helmet",
+        detail: "xUnit, Moq, Vitest, React Testing Library, JWT, RBAC, CSRF, BCrypt"
       },
       {
-        label: "Integrations",
-        detail: "Microsoft Dynamics 365, BIR EIS, Google Gemini API, OSV API, NIST NVD API, GitHub API",
+        label: "DevOps & Integrations",
+        detail: "GitHub Actions, Microsoft Dynamics 365, BIR EIS, Google Gemini API, OSV, NIST NVD"
       },
     ],
   },
@@ -814,9 +1067,24 @@ export const cvSections: CVSection[] = [
     title: "Certifications",
     items: [
       {
-        label: "In progress — curated on request",
-        detail: "Professional development tracked in Engineering Log and decision records.",
-        period: "2024 — Present",
+        label: "Foundational C# with Microsoft – Developer Certification",
+        detail: "freeCodeCamp & Microsoft",
+        period: "Nov 2025"
+      },
+      {
+        label: "JavaScript Essentials 2",
+        detail: "Cisco Networking Academy & OpenEDG",
+        period: "Aug 2026"
+      },
+      {
+        label: "Endpoint Security",
+        detail: "Cisco",
+        period: "Nov 2024"
+      },
+      {
+        label: "Cyber Threat Management",
+        detail: "Cisco",
+        period: "Nov 2024"
       },
     ],
   },
@@ -827,7 +1095,7 @@ export const cvSections: CVSection[] = [
       {
         label: "B.S. Information Systems — Batangas State University",
         detail: "Focus on software engineering and systems analysis.",
-        period: "2021 — 2025",
+        period: "2021 — 2025"
       },
     ],
   },

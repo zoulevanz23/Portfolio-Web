@@ -1,0 +1,83 @@
+[
+  {
+    "id": "dec-001",
+    "title": "Use a Layered Full-Stack Architecture",
+    "decision": "Separate the application into frontend, API/backend, database, and supporting infrastructure layers.",
+    "why": "Provides clearer separation of responsibilities and makes business applications easier to maintain, test, debug, and deploy.",
+    "alternative": "A tightly coupled application structure.",
+    "tradeoff": "More architectural structure and code boundaries in exchange for maintainability and easier testing.",
+    "relatedSystemId": "sys-001"
+  },
+  {
+    "id": "dec-002",
+    "title": "Use EF Core for Database Access",
+    "decision": "Use Entity Framework Core as the primary database access layer for .NET applications.",
+    "why": "Provides a consistent ORM-based approach to working with SQL Server while integrating naturally with the .NET application layer.",
+    "alternative": "Direct SQL/ADO.NET database access.",
+    "tradeoff": "ORM abstraction and developer productivity versus less direct control over SQL execution.",
+    "relatedSystemId": "sys-001"
+  },
+  {
+    "id": "dec-003",
+    "title": "Use JWT-Based Authentication",
+    "decision": "Use JWT Bearer authentication for API authorization.",
+    "why": "Provides a standard token-based authentication mechanism for frontend-to-API communication.",
+    "alternative": "Session-based authentication.",
+    "tradeoff": "Stateless API authorization and frontend flexibility versus the additional complexity of token lifecycle/security management.",
+    "relatedSystemId": "sys-001"
+  },
+  {
+    "id": "dec-004",
+    "title": "Introduce Redis for Supporting Infrastructure",
+    "decision": "Use Redis where caching/rate-limiting infrastructure provides value.",
+    "why": "Reduce unnecessary repeated work and support application-level rate limiting/caching requirements.",
+    "alternative": "Rely entirely on application memory or database-backed mechanisms.",
+    "tradeoff": "Adds infrastructure complexity and another dependency in exchange for better scalability and centralized cache/rate-limit state.",
+    "relatedSystemId": "sys-001"
+  },
+  {
+    "id": "dec-005",
+    "title": "Separate Authentication from Invoice Processing",
+    "decision": "Establish whether application can authenticate and communicate with external e-invoicing platform before investigating business logic failures.",
+    "why": "Provides clearer troubleshooting path: Application → Authentication → API Communication → Invoice Validation → Invoice Submission. Prevents conflating auth failures with application logic.",
+    "alternative": "Assume every failed invoice is caused by application logic and modify processing directly.",
+    "tradeoff": "Requires upfront investigation of credentials and API docs before code changes, in exchange for accurate root-cause isolation.",
+    "relatedSystemId": "sys-005"
+  },
+  {
+    "id": "dec-006",
+    "title": "Separate Cancelled Invoice Handling from Normal Submission",
+    "decision": "Split cancelled-invoice handling into a separate processing path so incompatible records do not enter normal submission context.",
+    "why": "Cancelled invoices have different structure and assumptions; mixing them caused Index out of bounds by violating collection/index assumptions.",
+    "alternative": "Make minimal change to suppress index error within shared path.",
+    "tradeoff": "Additional branching and validation logic versus single-path simplicity, but prevents class of data-mismatch errors and aligns with business process separation.",
+    "relatedSystemId": "sys-005"
+  },
+  {
+    "id": "dec-007",
+    "title": "Validate and Normalize Upstream Identifier at System Boundary",
+    "decision": "Validate incoming customer tax identifier, identify expected component, strip unexpected Branch Information, and ensure conformance before downstream processing.",
+    "why": "External/upstream data may be structurally different even from trusted internal sources; malformed values should not propagate.",
+    "alternative": "Allow malformed Identifier + Branch Information to flow into invoice pipeline and fail downstream.",
+    "tradeoff": "Extra validation/normalization step at boundary versus downstream failures and harder debugging.",
+    "relatedSystemId": "sys-005"
+  },
+  {
+    "id": "dec-008",
+    "title": "Own Integration as Technical Bridge with Documentation-Driven Investigation",
+    "decision": "Act as bridge between Internal Application Team, External Development Team, and External Platform Support, using API documentation as investigation tool rather than black box.",
+    "why": "Integration required coordination of authentication, registration, credentials, sandbox, and request expectations across multiple parties.",
+    "alternative": "Treat external API as black box and only reference docs when errors occur.",
+    "tradeoff": "Time invested in reading and understanding external system upfront versus faster but fragmented troubleshooting and miscommunication.",
+    "relatedSystemId": "sys-005"
+  },
+  {
+    "id": "dec-009",
+    "title": "Adopt Structured Incident Response: Reproduce → Document",
+    "decision": "Use 10-step process: Reproduce → Observe → Hypothesize → Validate → Determine solution → Review → Implement → Test (unit/system/integration/end-user) → Deploy → Document (what/why/changed/tested/deployed). Document decision, not just code.",
+    "why": "Creates traceable engineering record and minimizes risk in legacy systems by making smallest appropriate change after understanding existing behavior.",
+    "alternative": "Make random changes until symptom disappears and deploy without layered testing or documentation.",
+    "tradeoff": "More disciplined process and documentation overhead in exchange for controlled changes, confidence that business problem is solved, and future maintainability.",
+    "relatedSystemId": "sys-005"
+  }
+]

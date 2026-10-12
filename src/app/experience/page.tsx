@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { experience, systems, identity } from "@/content/site-content";
+import { experience, systems } from "@/content/site-content";
 import { SectionHeader } from "@/components/SectionHeader";
+import { ExperienceStats } from "@/components/ExperienceStats";
 import { PlaceholderBadge, isPlaceholder } from "@/components/PlaceholderBadge";
 
 export default function ExperiencePage() {
@@ -12,25 +13,8 @@ export default function ExperiencePage() {
         description="Outcome-oriented. Each role links to the systems built during that period."
       />
 
-      {/* KPIs */}
-      <div className="mb-10 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="border border-border bg-surface p-4 text-center">
-          <p className="font-mono text-2xl font-bold text-foreground">{identity.yearsExperience}</p>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-subtle">Years Experience</p>
-        </div>
-        <div className="border border-border bg-surface p-4 text-center">
-          <p className="font-mono text-2xl font-bold text-foreground">{identity.yearsDevelopment}</p>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-subtle">Years Development</p>
-        </div>
-        <div className="border border-border bg-surface p-4 text-center">
-          <p className="font-mono text-2xl font-bold text-foreground">{experience.length}</p>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-subtle">Roles Held</p>
-        </div>
-        <div className="border border-border bg-surface p-4 text-center">
-          <p className="font-mono text-2xl font-bold text-foreground">{systems.length}</p>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-subtle">Systems Built</p>
-        </div>
-      </div>
+      {/* KPIs — year values computed at runtime from identity start dates */}
+      <ExperienceStats rolesHeld={experience.length} systemsBuilt={systems.length} />
 
       <div className="space-y-8">
         {experience.map((entry) => (

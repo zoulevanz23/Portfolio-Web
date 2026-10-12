@@ -1,0 +1,621 @@
+[
+  {
+    "id": "sys-001",
+    "name": "Wastewater Parameter Monitoring System",
+    "function": "Monitors wastewater quality parameters and evaluates laboratory measurements against environmental standards.",
+    "stack": [
+      "React 18",
+      "TypeScript",
+      "Tailwind CSS",
+      "Redux Toolkit",
+      "Recharts",
+      "TanStack Table",
+      "ASP.NET Core 8",
+      "C#",
+      "Entity Framework Core",
+      "SignalR",
+      "Redis",
+      "QuestPDF",
+      "ClosedXML",
+      "MailKit",
+      "SQL Server"
+    ],
+    "status": "production",
+    "summary": "A full-stack environmental compliance system for recording and monitoring wastewater laboratory measurements across multiple monitoring points. The system evaluates measured parameters against defined standards and surfaces Passed, Failed, and Critical results through dashboards and reporting workflows.",
+    "narrative": "I built an end-to-end environmental compliance monitoring platform for an automotive parts manufacturer. The system tracks wastewater parameters across 9 facility sections — discharge, aeration, clarifiers, equalization — with a server-side judgment engine that automatically classifies every reading as Pass, Fail, or Critical against national regulatory and company-internal standards.",
+    "sellingPoints": [
+      "13-table SQL Server schema with temporal tables for audit compliance",
+      "Transactional outbox pattern for reliable email notifications",
+      "Real-time SignalR dashboards for live monitoring",
+      "Async PDF/Excel export via QuestPDF and ClosedXML",
+      "Cross-server HR database integration for user registration verification",
+      "JWT authentication with BCrypt and external HR database integration",
+      "Redis-backed KPI caching with employee-scoped keys",
+      "Full audit trail logging with user attribution and IP address tracking"
+    ],
+    "insideBuild": {
+      "problem": "Users previously had to manually compare laboratory values against acceptable standards. Readings were recorded on paper or spreadsheets, then checked by eye against national regulatory limits and stricter company-internal thresholds — slow, error-prone, and with no audit trail when a critical value slipped through.",
+      "context": "9 facility sections — discharge, aeration, clarifiers, equalization — each with its own parameter set and limits.",
+      "flow": [
+        {
+          "label": "Input",
+          "detail": "Lab personnel record wastewater measurements per monitoring point and parameter."
+        },
+        {
+          "label": "Validation",
+          "detail": "API rejects malformed readings early — range, format, and required-field checks before any business logic runs."
+        },
+        {
+          "label": "Standard Evaluation",
+          "detail": "Server-side judgment engine compares each reading against regulatory and company-internal standards."
+        },
+        {
+          "label": "Classification",
+          "detail": "Every reading is classified as Pass, Fail, or Critical, with temporal-table history for audit compliance."
+        },
+        {
+          "label": "Dashboard",
+          "detail": "SignalR pushes live results to dashboards; Redis caches KPI aggregates with employee-scoped keys."
+        },
+        {
+          "label": "Report + Notify",
+          "detail": "Async PDF/Excel export via QuestPDF and ClosedXML; transactional outbox + MailKit fires reliable critical-value email notifications."
+        }
+      ],
+      "decisions": [
+        {
+          "choice": ".NET 8 / ASP.NET Core / EF Core",
+          "why": "Strong ecosystem for enterprise applications and integration with existing Microsoft infrastructure. EF Core maps cleanly to the 13-table schema while stored procedures and views handle reporting-heavy reads."
+        },
+        {
+          "choice": "SQL Server with temporal tables",
+          "why": "Relational structure fits the application's reporting and transactional requirements. Temporal tables give an automatic audit trail for compliance without hand-rolled history tables."
+        },
+        {
+          "choice": "React + SignalR + Redis",
+          "why": "Component-driven UI with strong support for data-heavy applications. SignalR delivers live monitoring updates and Redis-backed KPI caching keeps dashboard queries off the transactional database."
+        }
+      ]
+    },
+    "architecture": {
+      "nodes": [
+        {
+          "id": "fe",
+          "label": "Web Client",
+          "type": "frontend",
+          "details": {
+            "framework": "React 18 / TypeScript / TailwindCSS / Redux Toolkit",
+            "auth": "JWT-based authentication",
+            "validation": "Client-side form validation + server-side API validation",
+            "testing": "Vitest + React Testing Library + jsdom"
+          }
+        },
+        {
+          "id": "api",
+          "label": "API Layer",
+          "type": "api",
+          "details": {
+            "framework": "ASP.NET Core 8 / C# / SignalR",
+            "auth": "JWT Bearer Authentication with BCrypt",
+            "dataAccess": "Entity Framework Core 8",
+            "validation": "API/model validation + business-rule validation",
+            "testing": "xUnit + Moq + WebApplicationFactory"
+          }
+        },
+        {
+          "id": "db",
+          "label": "SQL Server",
+          "type": "database",
+          "details": {
+            "dataAccess": "Entity Framework Core 8",
+            "notes": "13 tables, 11 stored procedures, 4 views, 3 table-valued functions, 9 performance indexes. Temporal tables for audit compliance."
+          }
+        },
+        {
+          "id": "cache",
+          "label": "Redis",
+          "type": "cache",
+          "details": {
+            "notes": "Redis caching for KPI data with employee-scoped keys and configurable TTLs (30s–600s)."
+          }
+        }
+      ],
+      "connections": [
+        {
+          "from": "fe",
+          "to": "api"
+        },
+        {
+          "from": "api",
+          "to": "db"
+        },
+        {
+          "from": "api",
+          "to": "cache"
+        }
+      ]
+    }
+  },
+  {
+    "id": "sys-002",
+    "name": "Employee Portal",
+    "function": "Centralizes employee information, calendars, training-related information, and employee-facing HR functionality.",
+    "stack": [
+      "React 18",
+      "TypeScript",
+      "Vite",
+      "Tailwind CSS",
+      "Axios",
+      "Zod",
+      "React Router 6",
+      "ASP.NET Core 8",
+      "C#",
+      "Entity Framework Core",
+      "FluentValidation",
+      "MailKit",
+      "Redis",
+      "Polly",
+      "Serilog",
+      "SQL Server"
+    ],
+    "status": "production",
+    "summary": "A centralized employee portal designed to bring HR-related employee information and functionality into one application. Replaces a manual process where 500+ employees had to contact HR or navigate multiple legacy systems just to view their own data.",
+    "narrative": "I built a self-service HR portal for a manufacturing company, replacing a manual process where 500+ employees had to contact HR or navigate multiple legacy systems just to view their own data. The system gives every employee a single dashboard showing their profile, government IDs, employment history, timekeeping, leave, overtime, and training records — all read from the company's existing SQL Server HR database through Entity Framework views and table-valued functions.",
+    "sellingPoints": [
+      "13 RESTful API controllers with ~60+ endpoints across auth, profile, timekeeping, leave, overtime, training, dashboard, FAQ, feedback, admin, and SSO",
+      "Cross-application SSO token generation for seamless access to Transportation Reimbursement app",
+      "JWT auth with HttpOnly cookies + CSRF + refresh token rotation + progressive lockout (3 attempts → 2→6→12 min)",
+      "Dual-database architecture — HR database (read-only views/TVFs) + portal database (writable SSO tables)",
+      "Redis distributed caching with employee-scoped cache keys and configurable TTLs (30s–600s)",
+      "Documented CI/CD pipeline with GitHub Actions, self-hosted runner, zero-downtime deployment",
+      "PBKDF2 password hashing with 100K iterations, 256-bit salt and hash",
+      "Security headers: HSTS, X-Frame-Options DENY, X-XSS-Protection, Referrer-Policy"
+    ],
+    "insideBuild": {
+      "problem": "Over 500 employees had to contact HR or navigate multiple legacy systems just to view their own data — profile, government IDs, employment history, timekeeping, leave, overtime, and training records. Every lookup cost HR staff time and left employees without a single source of truth.",
+      "context": "Company HR data already existed in SQL Server but was only reachable through legacy screens and manual requests.",
+      "flow": [
+        {
+          "label": "HR Source",
+          "detail": "Existing HR database exposed read-only through Entity Framework views and table-valued functions — no migration of legacy data."
+        },
+        {
+          "label": "API Aggregation",
+          "detail": "13 controllers with ~60+ endpoints aggregate profile, timekeeping, leave, overtime, and training into per-employee responses."
+        },
+        {
+          "label": "Cache",
+          "detail": "Redis distributed cache with employee-scoped keys and 30s–600s TTLs keeps repeated dashboard loads off the HR database."
+        },
+        {
+          "label": "Dashboard",
+          "detail": "Single self-service dashboard per employee replaces the contact-HR loop for everyday lookups."
+        },
+        {
+          "label": "SSO Handoff",
+          "detail": "Cross-application SSO token generation carries the session seamlessly into the Transportation Reimbursement app."
+        }
+      ],
+      "decisions": [
+        {
+          "choice": "Dual-database architecture",
+          "why": "The HR database stays read-only against the legacy HR schema while a separate portal database holds writable SSO tables. This isolates new writes from regulated HR data and avoids risky schema changes."
+        },
+        {
+          "choice": "JWT in HttpOnly cookies + CSRF + refresh rotation",
+          "why": "Cookie storage keeps tokens out of JavaScript reach while rotation and progressive lockout (3 attempts → 2→6→12 min) contain brute-force and theft scenarios for 500+ accounts."
+        },
+        {
+          "choice": "React + Vite with FluentValidation and Zod",
+          "why": "Component-driven UI with strong support for data-heavy applications. Server-side FluentValidation enforces business rules while Zod mirrors them on the client for instant feedback."
+        }
+      ]
+    },
+    "architecture": {
+      "nodes": [
+        {
+          "id": "fe",
+          "label": "Web Client",
+          "type": "frontend",
+          "details": {
+            "framework": "React 18 / TypeScript / Vite / Tailwind CSS",
+            "auth": "JWT in HttpOnly cookies + CSRF tokens",
+            "testing": "Vitest + React Testing Library"
+          }
+        },
+        {
+          "id": "api",
+          "label": "API Layer",
+          "type": "api",
+          "details": {
+            "framework": "ASP.NET Core 8 / C# / FluentValidation",
+            "auth": "JWT Bearer Authentication / SSO",
+            "dataAccess": "Entity Framework Core",
+            "validation": "FluentValidation + Zod (frontend)"
+          }
+        },
+        {
+          "id": "db",
+          "label": "SQL Server",
+          "type": "database",
+          "details": {
+            "dataAccess": "Entity Framework Core",
+            "notes": "Dual-database: HR database (read-only views/TVFs) + portal database (writable SSO tables)"
+          }
+        },
+        {
+          "id": "cache",
+          "label": "Redis",
+          "type": "cache",
+          "details": {
+            "notes": "Distributed caching with employee-scoped keys and configurable TTLs"
+          }
+        }
+      ],
+      "connections": [
+        {
+          "from": "fe",
+          "to": "api"
+        },
+        {
+          "from": "api",
+          "to": "db"
+        },
+        {
+          "from": "api",
+          "to": "cache"
+        }
+      ]
+    }
+  },
+  {
+    "id": "sys-003",
+    "name": "Transpo Reimbursement System",
+    "function": "End-to-end expense reimbursement platform for transportation and OT-extension claims with map-verified routes.",
+    "stack": [
+      "Next.js",
+      "React 19",
+      "TypeScript",
+      "TanStack Query",
+      "Chart.js",
+      "Leaflet",
+      ".NET 8",
+      "ASP.NET Core",
+      "EF Core",
+      "Redis",
+      "SQL Server",
+      "xUnit",
+      "Vitest"
+    ],
+    "status": "production",
+    "summary": "A complete enterprise LOB web application for managing transportation and OT-extension expense claims with map-verified routes, multi-level approval workflows, and real-time analytics dashboards.",
+    "narrative": "I built an end-to-end expense reimbursement platform for a manufacturing company. Employees submit transportation and OT-extension claims with map-verified routes; approvers move them through a Supervisor→Manager→DGM signing chain; admins get a real-time analytics dashboard.",
+    "sellingPoints": [
+      "Auth with SSO + lockout + audit, role-based multi-level approval state machine",
+      "PDF generation, dashboards, real routing API, external workflow automation",
+      "Corporate SSO introspection, HR DB read, DBA-fixed SQL contract",
+      "IIS/TLS internal deployment, Power Automate approval-notification flow",
+      "Refresh-token rotation, CSRF tokens, BCrypt, rate limiting, security headers",
+      "Full test coverage on both frontend and backend tiers"
+    ],
+    "insideBuild": {
+      "problem": "Transportation and OT-extension claims were filed manually with unverified routes and a paper Supervisor → Manager → DGM signing chain. Finance had no reliable distance basis for payouts and approvers had no shared view of claim state.",
+      "context": "Claims, approvals, payouts, and analytics all lived in separate manual steps with no map verification.",
+      "flow": [
+        {
+          "label": "Claim Input",
+          "detail": "Employees submit transportation and OT-extension claims with route endpoints and supporting details."
+        },
+        {
+          "label": "Map Route Verify",
+          "detail": "Leaflet plus a real routing API verifies claimed distances before a claim can advance."
+        },
+        {
+          "label": "State Machine",
+          "detail": "Role-based multi-level approval state machine enforces the Supervisor → Manager → DGM signing order."
+        },
+        {
+          "label": "Approval Chain",
+          "detail": "Approvers act in sequence with audit logging; SSO introspection carries identity from the Employee Portal."
+        },
+        {
+          "label": "PDF + Notify",
+          "detail": "PDF generation for records plus a Power Automate flow sends approval notifications."
+        },
+        {
+          "label": "Analytics",
+          "detail": "Real-time dashboards aggregate claim volume, amounts, and cycle time for admins."
+        }
+      ],
+      "decisions": [
+        {
+          "choice": "Next.js with TanStack Query",
+          "why": "Component-driven UI with strong support for data-heavy applications. TanStack Query keeps approval queues, claim detail, and analytics dashboards in sync without hand-rolled fetching logic."
+        },
+        {
+          "choice": "ASP.NET Core Minimal APIs with DBA-fixed SQL contract",
+          "why": "Minimal APIs keep the claim and approval surface lean while EF Core plus stored procedures respect the DBA-owned HR database contract."
+        },
+        {
+          "choice": "Redis with refresh rotation and rate limiting",
+          "why": "Centralized session and rate-limit state protects login and claim-submission endpoints while refresh-token rotation and CSRF keep the multi-role approval flow secure."
+        }
+      ]
+    },
+    "architecture": {
+      "nodes": [
+        {
+          "id": "fe",
+          "label": "Web Client",
+          "type": "frontend",
+          "details": {
+            "framework": "Next.js / React 19 / TypeScript / TanStack Query",
+            "auth": "JWT + SSO (OAuth2 introspection)",
+            "testing": "Vitest + React Testing Library"
+          }
+        },
+        {
+          "id": "api",
+          "label": "API Layer",
+          "type": "api",
+          "details": {
+            "framework": "ASP.NET Core Minimal APIs / .NET 8",
+            "auth": "JWT Bearer + SSO introspection",
+            "dataAccess": "Entity Framework Core",
+            "testing": "xUnit + Moq + WebApplicationFactory"
+          }
+        },
+        {
+          "id": "db",
+          "label": "SQL Server",
+          "type": "database",
+          "details": {
+            "dataAccess": "Entity Framework Core + stored procedures",
+            "notes": "DBA-fixed SQL contract for HR database integration"
+          }
+        },
+        {
+          "id": "cache",
+          "label": "Redis",
+          "type": "cache",
+          "details": {
+            "notes": "Redis caching for rate limiting and session management"
+          }
+        }
+      ],
+      "connections": [
+        {
+          "from": "fe",
+          "to": "api"
+        },
+        {
+          "from": "api",
+          "to": "db"
+        },
+        {
+          "from": "api",
+          "to": "cache"
+        }
+      ]
+    }
+  },
+  {
+    "id": "sys-004",
+    "name": "Cipher (VulnChecker)",
+    "function": "Multi-ecosystem dependency vulnerability scanner with CLI, REST API, web UI, and VS Code extension.",
+    "stack": [
+      "Python",
+      "FastAPI",
+      "React 19",
+      "TypeScript",
+      "Vite",
+      "Tailwind CSS",
+      "VS Code Extension API",
+      "GitHub Actions"
+    ],
+    "status": "development",
+    "summary": "A security tool that checks packages across 7 programming languages against OSV and NIST NVD databases, delivering results through four interfaces: REST API, CLI, web dashboard, and VS Code extension.",
+    "narrative": "I built a multi-ecosystem dependency vulnerability scanner that checks packages across 7 programming languages (npm, PyPI, Go, Maven, NuGet, RubyGems, Cargo) against the OSV and NIST NVD databases. The backend is Python/FastAPI with an async concurrent scanning engine — semaphore-limited to 20 parallel API requests with retry logic and exponential backoff.",
+    "sellingPoints": [
+      "Four delivery mechanisms from one codebase: REST API, CLI, web UI, VS Code extension",
+      "Concurrent scanning engine using asyncio.Semaphore for rate-limited parallel HTTP requests",
+      "7-ecosystem parser system handling 13+ manifest and lock file formats",
+      "Dual-source vulnerability intelligence: merges CVE data from OSV and NIST NVD databases",
+      "VS Code extension with inline security feedback and debounced re-scanning",
+      "CI/CD integration with GitHub Code Scanning via reusable GitHub Actions workflow",
+      "Fix engine with risk classification (safe/minor/major upgrades)",
+      "Industry-standard compliance output: SPDX 2.3, CycloneDX 1.5, SARIF 2.1.0",
+      "Package health scoring: 0-100 score per package based on vulnerability severity"
+    ],
+    "architecture": {
+      "nodes": [
+        {
+          "id": "cli",
+          "label": "CLI Tool",
+          "type": "frontend",
+          "details": {
+            "framework": "Python / Click / Rich",
+            "notes": "8 output formats, configurable fail-on-severity gating"
+          }
+        },
+        {
+          "id": "web",
+          "label": "Web Dashboard",
+          "type": "frontend",
+          "details": {
+            "framework": "React 19 / TypeScript / Vite / Tailwind CSS",
+            "notes": "Canvas-based visualizations for vulnerability data"
+          }
+        },
+        {
+          "id": "vscode",
+          "label": "VS Code Extension",
+          "type": "frontend",
+          "details": {
+            "framework": "VS Code Extension API / TypeScript",
+            "notes": "Inline diagnostics, debounced re-scanning, status bar indicator"
+          }
+        },
+        {
+          "id": "api",
+          "label": "API Layer",
+          "type": "api",
+          "details": {
+            "framework": "Python / FastAPI",
+            "notes": "Async concurrent scanning engine, retry with backoff"
+          }
+        },
+        {
+          "id": "db",
+          "label": "External APIs",
+          "type": "external",
+          "details": {
+            "notes": "OSV, NIST NVD, npm registry, PyPI registry, GitHub Advisories"
+          }
+        }
+      ],
+      "connections": [
+        {
+          "from": "cli",
+          "to": "api"
+        },
+        {
+          "from": "web",
+          "to": "api"
+        },
+        {
+          "from": "vscode",
+          "to": "api"
+        },
+        {
+          "from": "api",
+          "to": "db"
+        }
+      ]
+    }
+  },
+  {
+    "id": "sys-005",
+    "name": "Internal Invoice Compliance System",
+    "function": "Processes and transmits company invoices to an external electronic invoicing platform through an API integration.",
+    "stack": [
+      ".NET",
+      "C#",
+      "Entity Framework Core",
+      "SQL Server",
+      "External E-Invoicing API",
+      "Sandbox Environment",
+      "Integration Credentials"
+    ],
+    "status": "production",
+    "summary": "An internal enterprise application responsible for processing and transmitting company invoices to an external electronic invoicing platform. Inherited as a legacy production system with extended transmission issues; anonymized to omit credentials, customer info, infra details, endpoints, and confidential business information.",
+    "narrative": "Inherited as a legacy production system that had experienced invoice transmission issues over an extended period. Not the original author, so initial priority was understanding architecture, data flow, business rules, and external API requirements before modifying code. Scope spanned legacy investigation, database and data-flow analysis, API documentation review, credential management, input validation, unit and system testing, end-user validation, deployment, and incident documentation. Acted as technical bridge between internal team, external developers, and external platform support.",
+    "sellingPoints": [
+      "Anonymized enterprise integration — no credentials, customer info, infra details, endpoints, or confidential business data exposed",
+      "Legacy discovery before modification: codebase, data flow, and API requirements investigation",
+      "Integration credential replacement and configuration after authentication failure (Application → Authentication → API Communication → Validation → Submission)",
+      "Separated cancelled-invoice handling from normal submission to fix Index out of bounds",
+      "Upstream identifier validation and normalization at system boundary (Identifier + Branch Information)",
+      "Sandbox setup, certificate-related support, and application credential management",
+      "Multi-level testing: unit, system, integration, and end-user validation with approval process",
+      "Production deployment through established hosting with documented incident and decision records"
+    ],
+    "insideBuild": {
+      "problem": "Legacy invoice compliance system failed to transmit invoices to external platform after years in production; failures spanned authentication, data, and integration boundaries.",
+      "context": "Enterprise Invoice Processing / External API Integration — anonymized. 2026–Present. Role: Developer / System Support / Integration PIC. Portfolio Note: system and organization anonymized; credentials, customer info, infra, endpoints, and confidential business info intentionally omitted.",
+      "flow": [
+        {
+          "label": "Source Data",
+          "detail": "Invoice and customer data retrieved from upstream source; treated as untrusted input."
+        },
+        {
+          "label": "Boundary Validation",
+          "detail": "Validate customer identifier format; normalize Identifier + Branch Information before downstream processing."
+        },
+        {
+          "label": "Authentication",
+          "detail": "Authenticate to external platform using integration credentials; separated from invoice logic for clear troubleshooting."
+        },
+        {
+          "label": "Processing",
+          "detail": "Separate cancelled invoices from normal submission path to avoid collection/index assumptions."
+        },
+        {
+          "label": "Submission",
+          "detail": "Transmit invoice via external API; handle Index out of bounds and format validation failures."
+        },
+        {
+          "label": "Testing & Deployment",
+          "detail": "Unit, system, end-user validation, then commit and deploy through established hosting with review and approval."
+        }
+      ],
+      "decisions": [
+        {
+          "choice": "Understand before modifying legacy system",
+          "why": "Reduces risk of fixing one problem while creating another when inheriting unfamiliar codebase."
+        },
+        {
+          "choice": "Separate authentication from invoice-processing",
+          "why": "Clear troubleshooting path: Application → Authentication → API Communication → Validation → Submission."
+        },
+        {
+          "choice": "Validate and normalize at integration boundary",
+          "why": "Prevents malformed upstream data from propagating into downstream business logic."
+        }
+      ]
+    },
+    "architecture": {
+      "nodes": [
+        {
+          "id": "source",
+          "label": "Upstream Data Source",
+          "type": "external",
+          "details": {
+            "notes": "Source of invoice and customer records; treated as untrusted input."
+          }
+        },
+        {
+          "id": "app",
+          "label": "Internal Invoice Compliance System",
+          "type": "api",
+          "details": {
+            "framework": ".NET / Entity Framework Core",
+            "validation": "Boundary validation + identifier normalization",
+            "notes": "Anonymized — no infra details. Handles cancelled vs normal flows separately."
+          }
+        },
+        {
+          "id": "ext",
+          "label": "External Electronic Invoicing Platform",
+          "type": "external",
+          "details": {
+            "notes": "External API; sandbox + production; anonymized endpoints and credentials omitted."
+          }
+        },
+        {
+          "id": "db",
+          "label": "SQL Server",
+          "type": "database",
+          "details": {
+            "dataAccess": "Entity Framework Core",
+            "notes": "Anonymized data-flow; no business-sensitive schema exposed."
+          }
+        }
+      ],
+      "connections": [
+        {
+          "from": "source",
+          "to": "app"
+        },
+        {
+          "from": "app",
+          "to": "ext"
+        },
+        {
+          "from": "app",
+          "to": "db"
+        }
+      ]
+    }
+  }
+]

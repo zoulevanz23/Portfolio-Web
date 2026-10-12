@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { systems } from "@/content/site-content";
 import { PlaceholderBadge, isPlaceholder } from "@/components/PlaceholderBadge";
+import { SystemTabs } from "@/components/SystemTabs";
 
 export function generateStaticParams() {
   return systems.map((s) => ({ id: s.id }));
@@ -31,6 +32,10 @@ export default async function SystemDetailPage({
         </div>
         <h1 className="prose-heading">{system.name}</h1>
         <p className="mt-2 font-mono text-sm text-muted">{system.function}</p>
+
+        <div className="mt-6">
+          <SystemTabs systemId={system.id} active="view" hasBuild={Boolean(system.insideBuild)} />
+        </div>
 
         <div className="mt-6 flex flex-wrap gap-2">
           {system.stack.map((tag) => (
@@ -64,10 +69,15 @@ export default async function SystemDetailPage({
           <p className="leading-relaxed text-foreground">{system.summary}</p>
         </div>
 
-        <div className="mt-8 flex gap-4">
+        <div className="mt-8 flex flex-wrap gap-4">
           <Link href={`/systems/${system.id}/inspect`} className="btn-primary">
             Inspect System
           </Link>
+          {system.insideBuild && (
+            <Link href={`/systems/${system.id}/build`} className="btn-primary">
+              Inside the Build
+            </Link>
+          )}
           <Link href="/systems" className="btn-secondary">
             Back to index
           </Link>

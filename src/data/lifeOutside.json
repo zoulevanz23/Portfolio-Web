@@ -1,0 +1,26 @@
+[
+  {
+    "id": "lo-hobby-001",
+    "category": "hobby",
+    "title": "Running",
+    "detail": "Running is one of the ways I step away from the screen, build consistency, and measure progress outside of software."
+  },
+  {
+    "id": "lo-hobby-002",
+    "category": "hobby",
+    "title": "Anime / Reading",
+    "detail": "Anime and reading are part of how I spend time away from development, especially stories that explore growth, identity, struggle, and becoming better."
+  },
+  {
+    "id": "lo-music-001",
+    "category": "music",
+    "title": "Curating focus playlists",
+    "detail": "Lo-fi and instrumental mixes for deep work — currently curating a personal rotation."
+  },
+  {
+    "id": "lo-manhwa-001",
+    "category": "manhwa",
+    "title": "Exploring manhwa",
+    "detail": "Collecting recommendations — list will be curated here soon."
+  }
+]

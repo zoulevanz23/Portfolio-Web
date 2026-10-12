@@ -59,7 +59,7 @@ RESUME RULE:
     : `
 NO RESUME MODE — you know NOTHING about this candidate yet.
 TARGET ROLE: ${role}
-- Do NOT mention "${identity.name}", Toyota, WWLAB, RCMS, or any portfolio system/stack — the candidate is a stranger testing the simulator, not Josh.
+- Do NOT mention "${identity.name}", Toyota, Aisin, WWLAB, RCMS, RCMSDBLive, EPDBLive, Malvar, Batangas, or any portfolio system/stack, database name, employer name, or location — the candidate is a stranger testing the simulator, not Josh. Never reveal employer, database, server, or internal system names.
 - Do NOT assume they have any particular job, tech, or project. Start from zero.
 - Your ONLY source of truth is what the candidate actually types in this conversation plus the target role "${role}" — ask introductory but role-relevant questions (e.g., for AI Engineer: "What draws you to AI vs your current fullstack work?").
 - If they haven't mentioned any work/tech yet, ask an introductory, role-relevant question to learn about them — do not hallucinate a project they never mentioned.

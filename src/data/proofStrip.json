@@ -1,0 +1,18 @@
+[
+  {
+    "label": "Systems Shipped",
+    "value": "3+"
+  },
+  {
+    "label": "Full-Stack Scope",
+    "value": "Frontend → API → DB"
+  },
+  {
+    "label": "Production Status",
+    "value": "2 in production"
+  },
+  {
+    "label": "Current Stack",
+    "value": ".NET 8 / Next.js / TypeScript / SQL Server"
+  }
+]

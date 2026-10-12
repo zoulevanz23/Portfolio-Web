@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { SectionHeader } from "@/components/SectionHeader";
+import { Skeleton, TableGridSkeleton } from "@/components/Skeleton";
 
 type Section = { type: string; lines: string[] };
 
@@ -1024,18 +1025,24 @@ export default function SchemaArchitectPage() {
         {/* Right: output */}
         <div className="lg:min-h-[calc(100vh-260px)] lg:overflow-y-auto lg:pr-2">
           {generating && sections.length === 0 && (
-            <div
-              className="flex items-center gap-3 rounded-xl border p-5"
-              style={{ borderColor: BORDER, backgroundColor: FILL }}
-            >
-              <span
-                aria-hidden
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ background: ACCENT, boxShadow: `0 0 12px ${ACCENT}` }}
-              />
-              <p className="font-mono text-xs text-muted animate-pulse">
-                Normalizing, mapping relationships, tuning indexes...
-              </p>
+            <div className="space-y-3" role="status" aria-label="Generating schema">
+              <div
+                className="flex items-center gap-3 rounded-xl border p-5"
+                style={{ borderColor: BORDER, backgroundColor: FILL }}
+              >
+                <span
+                  aria-hidden
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ background: ACCENT, boxShadow: `0 0 12px ${ACCENT}` }}
+                />
+                <p className="font-mono text-xs text-muted animate-pulse">
+                  Normalizing, mapping relationships, tuning indexes...
+                </p>
+              </div>
+              <Skeleton className="h-32 w-full" label="Loading overview" />
+              <TableGridSkeleton count={4} />
+              <Skeleton className="h-24 w-full" label="Loading relationships" />
+              <span className="sr-only">Generating schema…</span>
             </div>
           )}
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { systems } from "@/content/site-content";
 import { ArchitectureDiagram } from "@/components/ArchitectureDiagram";
+import { SystemTabs } from "@/components/SystemTabs";
 import { PlaceholderBadge, isPlaceholder } from "@/components/PlaceholderBadge";
 
 export function generateStaticParams() {
@@ -31,6 +32,8 @@ export default async function SystemInspectPage({
       </div>
       <h1 className="prose-heading mb-2">{system.name}</h1>
       <p className="mb-8 font-mono text-sm text-muted">{system.function}</p>
+
+      <SystemTabs systemId={system.id} active="inspect" hasBuild={Boolean(system.insideBuild)} />
 
       <ArchitectureDiagram
         nodes={system.architecture.nodes}

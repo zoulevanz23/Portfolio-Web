@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Thought } from "@/lib/thoughts-shared";
+import { ChatBubbleSkeleton } from "@/components/Skeleton";
 
 const REACTIONS: { key: string; label: string; icon: React.ReactNode }[] = [
   {
@@ -106,6 +107,7 @@ export function ThoughtsWall() {
   const [thoughts, setThoughts] = useState<Thought[]>([]);
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionName, setSessionName] = useState("");
@@ -122,7 +124,9 @@ export function ThoughtsWall() {
         const data = await res.json();
         setThoughts(data.thoughts || []);
       }
-    } catch {}
+    } catch {} finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -206,7 +210,18 @@ export function ThoughtsWall() {
 
       {/* Messages */}
       <div className="flex-1 space-y-4 overflow-y-auto bg-background px-4 py-5">
-        {thoughts.length === 0 ? (
+        {loading ? (
+          <>
+            <ChatBubbleSkeleton />
+            <div className="flex justify-end">
+              <div className="w-2/3">
+                <ChatBubbleSkeleton mine />
+              </div>
+            </div>
+            <ChatBubbleSkeleton />
+            <ChatBubbleSkeleton />
+          </>
+        ) : thoughts.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <p className="text-center text-sm text-muted">
               No messages yet. Say hi — Josh will reply in his own voice.

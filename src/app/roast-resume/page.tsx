@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { SectionHeader } from "@/components/SectionHeader";
+import { Skeleton } from "@/components/Skeleton";
 
 /* Parsed sections of the roasted resume */
 type RoastSection = { type: string; body: string };
@@ -400,18 +401,24 @@ export default function RoastResumePage() {
         <div className="lg:min-h-[calc(100vh-260px)] lg:overflow-y-auto lg:pr-2">
           {/* Roast result */}
           {roasting && sections.length === 0 && (
-            <div
-              className="flex items-center gap-3 rounded-xl border p-5"
-              style={{ borderColor: "var(--roast-border)", backgroundColor: "var(--roast-fill)" }}
-            >
-              <span
-                aria-hidden
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ background: "var(--roast-flame)", boxShadow: "0 0 12px var(--roast-flame)" }}
-              />
-              <p className="font-mono text-xs text-muted animate-pulse">
-                Cracking knuckles, finding the smoke...
-              </p>
+            <div className="space-y-4" role="status" aria-label="Roasting resume">
+              <div
+                className="flex items-center gap-3 rounded-xl border p-5"
+                style={{ borderColor: "var(--roast-border)", backgroundColor: "var(--roast-fill)" }}
+              >
+                <span
+                  aria-hidden
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ background: "var(--roast-flame)", boxShadow: "0 0 12px var(--roast-flame)" }}
+                />
+                <p className="font-mono text-xs text-muted animate-pulse">
+                  Cracking knuckles, finding the smoke...
+                </p>
+              </div>
+              <Skeleton className="h-32 w-full" label="Loading roast hook" />
+              <Skeleton className="h-24 w-full" label="Loading roast" />
+              <Skeleton className="h-24 w-full" label="Loading roast" />
+              <span className="sr-only">Roasting resume…</span>
             </div>
           )}
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SectionHeader } from "@/components/SectionHeader";
+import { CodeResponseSkeleton } from "@/components/Skeleton";
 
 const endpoints = [
   { method: "GET", path: "/api/projects", description: "List all systems/projects" },
@@ -132,6 +133,8 @@ export default function ApiPlaygroundPage() {
                 <pre className="code-block">{response}</pre>
               </div>
             )}
+
+            {loading && !response && <CodeResponseSkeleton lines={10} />}
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, useEffect } from "react";
+import { TypingSkeleton } from "@/components/Skeleton";
 
 const IN_ACCENT = "var(--interview-accent)";
 const IN_ACCENT_SOFT = "var(--interview-accent-soft)";
@@ -704,6 +705,7 @@ export function InterviewChat({ persona, simulationMode, resumeText, candidateNa
             )}
           </div>
         ))}
+        {isStreaming && <TypingSkeleton label={`${PERSONA_NAMES[activePersona || ""] || "Interviewer"} is responding`} />}
         <div ref={messagesEndRef} />
       </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 import { cvSections, identity } from "@/content/site-content";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -134,22 +135,32 @@ export default function CVPage() {
 
       {/* CV Content - optimized for print/ATS */}
       <div className="max-w-3xl space-y-8">
-        {/* Header */}
+        {/* Header — clean, no [Phone]/[Location] artifacts */}
         <div className="border-b border-border pb-6">
           <h1 className="text-2xl font-bold text-foreground">{identity.name}</h1>
-          <p className="mt-1 font-mono text-sm text-muted">{identity.role}</p>
-          <div className="mt-3 flex flex-wrap gap-3 font-mono text-xs text-subtle">
-            <span>{identity.email}</span>
-            <span>|</span>
-            <span>[Phone]</span>
-            <span>|</span>
-            <span>[Location]</span>
-            <span>|</span>
-            <span>{identity.linkedin}</span>
-            <span>|</span>
-            <span>{identity.github}</span>
-            <span>|</span>
-            <span>Portfolio</span>
+          <p className="mt-1 font-mono text-sm text-muted">Software Engineer | Full-Stack Developer</p>
+          <div className="mt-3 flex flex-wrap gap-2 font-mono text-xs text-subtle items-center">
+            <span>Batangas, Philippines</span>
+            {identity.email !== "Available on request" && identity.email && (
+              <>
+                <span>•</span>
+                <a href={`mailto:${identity.email}`} className="link-underline">
+                  {identity.email}
+                </a>
+              </>
+            )}
+            <span>•</span>
+            <a href={identity.linkedin} target="_blank" rel="noopener noreferrer" className="link-underline">
+              LinkedIn
+            </a>
+            <span>•</span>
+            <a href={identity.github} target="_blank" rel="noopener noreferrer" className="link-underline">
+              GitHub
+            </a>
+            <span>•</span>
+            <Link href="/" className="link-underline">
+              Portfolio
+            </Link>
           </div>
         </div>
 
@@ -159,29 +170,40 @@ export default function CVPage() {
             <h2 className="mb-3 border-b border-border pb-1 font-mono text-sm font-bold uppercase tracking-wider text-foreground">
               {section.title}
             </h2>
-            <div className="space-y-4">
+            <div className={section.id === "certifications" ? "space-y-3" : "space-y-4"}>
               {section.items.map((item, i) => (
-                <div key={i}>
+                <div key={i} className={section.id === "certifications" ? "leading-tight" : ""}>
                   {item.label && (
                     <div className="flex items-baseline justify-between gap-4">
-                      <p className="font-medium text-foreground">{item.label}</p>
+                      <p className="font-medium text-foreground leading-tight pr-2">{item.label}</p>
                       {item.period && (
-                        <p className="font-mono text-xs text-subtle whitespace-nowrap">{item.period}</p>
+                        <p className="font-mono text-xs text-subtle whitespace-nowrap shrink-0">{item.period}</p>
                       )}
                     </div>
                   )}
                   {section.id === "experience" || section.id === "projects" ? (
-                    <ul className="mt-2 space-y-1">
+                    <ul className="mt-2 space-y-1 list-disc pl-5">
                       {item.detail.split(". ").filter(Boolean).map((sentence, j) => (
-                        <li key={j} className="text-sm leading-relaxed text-muted flex gap-2">
-                          <span className="text-subtle mt-0.5">—</span>
-                          <span>{sentence.endsWith(".") ? sentence : `${sentence}.`}</span>
+                        <li key={j} className="text-sm leading-relaxed text-muted">
+                          {sentence.endsWith(".") ? sentence : `${sentence}.`}
                         </li>
                       ))}
                     </ul>
                   ) : section.id === "skills" ? (
                     <p className="mt-1 text-sm leading-relaxed text-muted">
                       <span className="font-medium text-foreground">{item.label}:</span> {item.detail}
+                    </p>
+                  ) : section.id === "certifications" ? (
+                    <p className="mt-1 text-sm leading-relaxed text-muted break-words">
+                      {item.detail.split(/(https:\/\/\S+)/g).map((part, idx) =>
+                        part.startsWith("https://") ? (
+                          <a key={idx} href={part} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-subtle underline underline-offset-2 break-all">
+                            {part}
+                          </a>
+                        ) : (
+                          <span key={idx}>{part}</span>
+                        )
+                      )}
                     </p>
                   ) : (
                     <p className="mt-1 text-sm leading-relaxed text-muted">{item.detail}</p>
